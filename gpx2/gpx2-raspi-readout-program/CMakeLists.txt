@@ -44,11 +44,10 @@ target_include_directories(readout PUBLIC
 
 target_link_directories(readout PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/../lib/")
 target_link_libraries(readout
-    gpx2
+    gpx2_static
 )
 
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
 
-install(TARGETS readout DESTINATION lib COMPONENT readout)
-install(FILES ${PROJECT_HEADER_FILES} DESTINATION include COMPONENT readout)
+install(TARGETS readout DESTINATION bin COMPONENT readout)

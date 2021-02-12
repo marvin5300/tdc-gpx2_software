@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(gpx2 LANGUAGES CXX C)
+project(gpx2_objlib LANGUAGES CXX C)
 
 set(PROJECT_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(PROJECT_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
@@ -42,23 +42,45 @@ set(GPX2_HEADER_FILES
     "${PROJECT_HEADER_DIR}/config.h"
 )
 
-add_definitions(-DGPX2_LIBRARY_EXPORT)
+add_definitions(-Dgpx2_objlib_LIBRARY_EXPORT)
 
-add_library(gpx2 OBJECT ${GPX2_SOURCE_FILES} ${GPX2_HEADER_FILES})
+add_library(gpx2_objlib OBJECT ${GPX2_SOURCE_FILES} ${GPX2_HEADER_FILES})
 
+add_library(gpx2 SHARED $<TARGET_OBJECTS:gpx2_objlib>)
+add_library(gpx2_static STATIC $<TARGET_OBJECTS:gpx2_objlib>)
 
-target_include_directories(gpx2 PUBLIC
+target_include_directories(gpx2_objlib PUBLIC
     ${PROJECT_HEADER_DIR}
 )
 
-set_property(TARGET gpx2 PROPERTY POSITION_INDEPENDENT_CODE 1)
+set_property(TARGET gpx2_objlib PROPERTY POSITION_INDEPENDENT_CODE 1)
 
-target_link_libraries(gpx2
+target_link_libraries(gpx2_objlib
     pigpiod_if2
 )
 
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
 
-install(TARGETS gpx2 DESTINATION lib COMPONENT gpx2)
-install(FILES ${PROJECT_HEADER_FILES} DESTINATION include COMPONENT gpx2)
+install(TARGETS gpx2_objlib DESTINATION lib COMPONENT gpx2)
+install(FILES ${GPX2_HEADER_FILES} DESTINATION include COMPONENT gpx2)
+
+set(CPACK_GENERATOR "DEB")
+set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "pigpiod")
+set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_CONFIG_DIR}/license")
+set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${PROJECT_CONFIG_DIR}/triggers")
+set(CPACK_PACKAGE_VENDOR "Marvin Peter")
+set(CPACK_DEBIAN_PACKAGE_SECTION "Electronics")
+set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://github.com/marvin5300/GPX2-TDC")
+set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
+set(CPACK_PACKAGE_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
+set(CPACK_PACKAGE_VERSION_MINOR "${PROJECT_VERSION_MINOR}")
+set(CPACK_PACKAGE_VERSION_PATCH "${PROJECT_VERSION_PATCH}")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Library for GPX2 TDC control")
+set(CPACK_DEBIAN_PACKAGE_DESCRIPTION " It makes connecting to TDC board possible.
+ It is licensed under the GNU Lesser General Public License version 3 (LGPL v3).")
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Marvin Peter <marvin.peter@physik.uni-giessen.de>")
+set(CPACK_PACKAGE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../packages/")
+
+include(CPack)
