@@ -26,10 +26,7 @@ GPX2::~GPX2() {
 		}
 	}
 	if (pi >= 0) {
-		bool status = pigpio_stop(pi);
-		if (status != 0) {
-			std::cerr << "pi bad handle";
-		}
+		pigpio_stop(pi);
 	}
 }
 
@@ -41,29 +38,33 @@ void GPX2::init_reset() {
 	writeSpi(spiopc_init, "");
 }
 
-bool GPX2::write_all_config(Config config) {
-	return write_all_config(config.str());
+bool GPX2::write_config() {
+	write_config(config);
 }
 
-bool GPX2::write_all_config(std::string config) {
-	if (config.size() != 18) {
+bool GPX2::write_config(Config data) {
+	return write_config(data.str());
+}
+
+bool GPX2::write_config(std::string data) {
+	if (data.size() != 18) {
 		std::cerr << "write all of the config only possible if 18 bytes of data provided\n";
 		return false;
 	}
-	return writeSpi(spiopc_write_config, config);
+	return writeSpi(spiopc_write_config, data);
 }
 
-bool GPX2::write_config(uint8_t reg_addr, uint8_t config) {
+bool GPX2::write_config(uint8_t reg_addr, uint8_t data) {
 	if (reg_addr > 17) {
 		std::cerr << "write config is only possible on register addr. 0...17\n";
 		return false;
 	}
-	std::string conf_str = "" + static_cast<char>(config);
+	std::string conf_str = "" + static_cast<char>(data);
 	return writeSpi(spiopc_write_config | reg_addr, conf_str);
 }
 
 std::string GPX2::read_all_config() {
-	std::string config = readSpi(spiopc_read_config, 18);
+	return readSpi(spiopc_read_config, 18);
 }
 
 uint8_t GPX2::read_config(uint8_t reg_addr) {
@@ -71,11 +72,11 @@ uint8_t GPX2::read_config(uint8_t reg_addr) {
 		std::cerr << "read config is only possible on register addr. 0...17\n";
 		return 0;
 	}
-	std::string config = readSpi(spiopc_read_config | reg_addr, 1);
-	if (config.empty()) {
+	std::string data = readSpi(spiopc_read_config | reg_addr, 1);
+	if (data.empty()) {
 		return 0;
 	}
-	return config[0];
+	return data[0];
 }
 
 bool GPX2::writeSpi(uint8_t command, std::string data) {
@@ -91,10 +92,23 @@ bool GPX2::writeSpi(uint8_t command, std::string data) {
 		txBuf[i] = data[i - 1];
 	}
 	char* rxBuf = (char*)malloc(data.size() + 1);
-	bool status = spi_xfer(pi, spiHandle, txBuf, rxBuf, data.size() + 1) == 1 + data.size();
-	if (!status) {
-		std::cerr << "writeSpi(uint8_t, std::string): wrong number of bytes transfered\n";
+	int status = spi_xfer(pi, spiHandle, txBuf, rxBuf, data.size() + 1);
+	if (status != 1 + data.size()) {
+		if (status == PI_BAD_HANDLE) {
+			std::cerr << "writeSpi(...) : PI_BAD_HANDLE\n";
+		}
+		else if (status == PI_SPI_XFER_FAILED) {
+			std::cerr << "writeSpi(...) : PI_SPI_XFER_FAILED\n";
+		}
+		else if (status == PI_BAD_SPI_COUNT) {
+			std::cerr << "writeSpi(...): PI_BAD_SPI_COUNT\n";
+		}
+		else {
+			std::cerr << "writeSpi(...) : wrong number of bytes transfered\n";
+		}
+		return false;
 	}
+
 
 	free(txBuf);
 	free(rxBuf);
@@ -118,9 +132,18 @@ std::string GPX2::readSpi(uint8_t command, unsigned int bytesToRead) {
 	for (unsigned int i = 1; i < bytesToRead; i++) {
 		txBuf[i] = 0;
 	}
-	bool status = spi_xfer(pi, spiHandle, txBuf, rxBuf, bytesToRead + 1) == 1 + bytesToRead;
-	if (!status) {
-		std::cerr << "readSpi(uint8_t, unsigned int): wrong number of bytes transfered\n";
+	int status = spi_xfer(pi, spiHandle, txBuf, rxBuf, bytesToRead + 1);
+	if (status != 1 + bytesToRead) {
+		if (status == PI_BAD_HANDLE) {
+			std::cerr << "readSpi(...) : PI_BAD_HANDLE\n";
+		}else if (status == PI_SPI_XFER_FAILED) {
+			std::cerr << "readSpi(...) : PI_SPI_XFER_FAILED\n";
+		}else if (status == PI_BAD_SPI_COUNT) {
+			std::cerr << "readSpi(...) : PI_BAD_SPI_COUNT\n";
+		}
+		else {
+			std::cerr << "readSpi(...) : wrong number of bytes transfered\n";
+		}
 		return "";
 	}
 

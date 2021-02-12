@@ -20,9 +20,10 @@ public:
 
 	void power_on_reset();
 	void init_reset();
-	bool write_all_config(Config config);
-	bool write_all_config(std::string config);
-	bool write_config(uint8_t reg_addr, uint8_t config);
+	bool write_config();
+	bool write_config(Config data);
+	bool write_config(std::string data);
+	bool write_config(uint8_t reg_addr, uint8_t data);
 	std::string read_all_config();
 	uint8_t read_config(uint8_t reg_addr);
 
