@@ -32,10 +32,12 @@ configure_file(
 
 set(GPX2_SOURCE_FILES
     "${PROJECT_SRC_DIR}/gpx2.cpp"
+    "${PROJECT_SRC_DIR}/config.cpp"
 )
 
 set(GPX2_HEADER_FILES
     "${PROJECT_HEADER_DIR}/gpx2.h"
+    "${PROJECT_HEADER_DIR}/config.h"
 )
 
 add_definitions(-DGPX2_LIBRARY_EXPORT)
