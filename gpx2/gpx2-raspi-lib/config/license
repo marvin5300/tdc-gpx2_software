@@ -1,6 +1,6 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-#Upstream-Name: muondetector-daemon
-#Source: https://github.com/marvin5300/muondetector
+#Upstream-Name: gpx2
+#Source: https://github.com/marvin5300/GPX2-TDC
 
 Files: *
 Copyright: 2021 Marvin Peter <marvin.peter@physik.uni-giessen.de>
