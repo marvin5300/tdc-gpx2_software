@@ -40,7 +40,7 @@ void GPX2::init_reset() {
 }
 
 bool GPX2::write_config() {
-	write_config(config);
+	return write_config(config);
 }
 
 bool GPX2::write_config(Config data) {

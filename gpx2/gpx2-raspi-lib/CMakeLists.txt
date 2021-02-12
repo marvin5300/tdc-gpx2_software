@@ -44,21 +44,16 @@ set(GPX2_HEADER_FILES
 
 add_definitions(-DGPX2_LIBRARY_EXPORT)
 
-add_library(gpx2 STATIC ${GPX2_SOURCE_FILES} ${GPX2_HEADER_FILES})
-add_library(gpx2_shared SHARED ${GPX2_SOURCE_FILES} ${GPX2_HEADER_FILES})
+add_library(gpx2 OBJECT ${GPX2_SOURCE_FILES} ${GPX2_HEADER_FILES})
+
 
 target_include_directories(gpx2 PUBLIC
     ${PROJECT_HEADER_DIR}
 )
 
-target_include_directories(gpx2_shared PUBLIC
-    ${PROJECT_HEADER_DIR}
-)
-target_link_libraries(gpx2
-    pigpiod_if2
-)
+set_property(TARGET gpx2 PROPERTY POSITION_INDEPENDENT_CODE 1)
 
-target_link_libraries(gpx2_shared
+target_link_libraries(gpx2
     pigpiod_if2
 )
 
@@ -66,5 +61,4 @@ set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
 
 install(TARGETS gpx2 DESTINATION lib COMPONENT gpx2)
-install(TARGETS gpx2_shared DESTINATION lib COMPONENT gpx2)
 install(FILES ${PROJECT_HEADER_FILES} DESTINATION include COMPONENT gpx2)

@@ -26,6 +26,7 @@ public:
 	bool write_config(uint8_t reg_addr, uint8_t data);
 	std::string read_config();
 	uint8_t read_config(uint8_t reg_addr);
+	std::string read_results();
 
 	bool writeSpi(uint8_t command, std::string data);
 	std::string readSpi(uint8_t command, unsigned int bytesToRead);
