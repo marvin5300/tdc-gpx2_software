@@ -1,10 +1,10 @@
-#ifndef MUONDETECTOR_VERSION_H
-#define MUONDETECTOR_VERSION_H
+#ifndef GPX2_VERSION_H
+#define GPX2_VERSION_H
 
-namespace MuonPi::CMake::Version {
+namespace gpx2::CMake::Version {
 constexpr int major { 1 };
 constexpr int minor { 0 };
 constexpr int patch { 0 };
 }
 
-#endif // MUONDETECTOR_VERSION_H
+#endif // GPX2_VERSION_H
