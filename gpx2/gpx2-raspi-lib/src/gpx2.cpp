@@ -16,6 +16,7 @@ GPX2::GPX2() {
 		std::cerr << "Could not initialise spi connection.\n";
 		return;
 	}
+	power_on_reset();
 }
 
 GPX2::~GPX2() {
@@ -63,8 +64,8 @@ bool GPX2::write_config(uint8_t reg_addr, uint8_t data) {
 	return writeSpi(spiopc_write_config | reg_addr, conf_str);
 }
 
-std::string GPX2::read_all_config() {
-	return readSpi(spiopc_read_config, 18);
+std::string GPX2::read_config() {
+	return readSpi(spiopc_read_config, 16);
 }
 
 uint8_t GPX2::read_config(uint8_t reg_addr) {
@@ -77,6 +78,10 @@ uint8_t GPX2::read_config(uint8_t reg_addr) {
 		return 0;
 	}
 	return data[0];
+}
+
+std::string GPX2::read_results() {
+	return readSpi(spiopc_read_results | 0x08, 26);
 }
 
 bool GPX2::writeSpi(uint8_t command, std::string data) {
@@ -93,7 +98,7 @@ bool GPX2::writeSpi(uint8_t command, std::string data) {
 	}
 	char* rxBuf = (char*)malloc(data.size() + 1);
 	int status = spi_xfer(pi, spiHandle, txBuf, rxBuf, data.size() + 1);
-	if (status != 1 + data.size()) {
+	if (status != static_cast<long int>(1 + data.size())) {
 		if (status == PI_BAD_HANDLE) {
 			std::cerr << "writeSpi(...) : PI_BAD_HANDLE\n";
 		}
@@ -121,10 +126,6 @@ std::string GPX2::readSpi(uint8_t command, unsigned int bytesToRead) {
 			return "";
 		}
 	}
-	//char buf[bytesToRead];
-	//char charCommand = command;
-	//spi_write(pi, spiHandle, &charCommand, 1);
-	//spi_read(pi, spiHandle, buf, bytesToRead);
 
 	char* rxBuf = (char*)malloc(bytesToRead + 1);
 	char* txBuf = (char*)malloc(bytesToRead + 1);
@@ -133,7 +134,7 @@ std::string GPX2::readSpi(uint8_t command, unsigned int bytesToRead) {
 		txBuf[i] = 0;
 	}
 	int status = spi_xfer(pi, spiHandle, txBuf, rxBuf, bytesToRead + 1);
-	if (status != 1 + bytesToRead) {
+	if (status != static_cast<long int>(1 + bytesToRead)) {
 		if (status == PI_BAD_HANDLE) {
 			std::cerr << "readSpi(...) : PI_BAD_HANDLE\n";
 		}else if (status == PI_SPI_XFER_FAILED) {
