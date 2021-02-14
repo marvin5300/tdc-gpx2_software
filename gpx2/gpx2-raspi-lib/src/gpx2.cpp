@@ -16,6 +16,7 @@ GPX2::GPX2() {
 	}
 	if (!spiInitialise()) {
 		std::cerr << "Could not initialise spi connection.\n";
+		exit(-1);
 		return;
 	}
 	power_on_reset();
@@ -165,10 +166,6 @@ bool GPX2::isSpiInitialised() {
 }
 
 bool GPX2::spiInitialise() {
-	if (!spiInitialised) {
-		std::cerr << "pigpiohandler not initialised\n";
-		return false;
-	}
 	if (spiInitialised) {
 		return true;
 	}
