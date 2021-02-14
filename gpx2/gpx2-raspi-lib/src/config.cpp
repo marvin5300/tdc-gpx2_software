@@ -2,6 +2,8 @@
 #include <stdint.h>
 #include <string>
 
+using namespace GPX2_TDC;
+
 // default config defined by the author of this program
 Config::Config() {
 	PIN_ENA_RSTIDX = 0;

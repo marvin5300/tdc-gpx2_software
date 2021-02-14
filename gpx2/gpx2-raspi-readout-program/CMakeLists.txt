@@ -39,7 +39,7 @@ add_executable(readout ${READOUT_SOURCE_FILES} ${READOUT_HEADER_FILES})
 
 target_include_directories(readout PUBLIC
     ${PROJECT_HEADER_DIR}
-
+    "${CMAKE_CURRENT_SOURCE_DIR}/../gpx2-raspi-lib/include/"
 )
 
 target_link_directories(readout PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/../lib/")

@@ -11,34 +11,36 @@ static const uint8_t spiopc_write_config = 0x80; // Write to configuration regis
 static const uint8_t spiopc_read_results = 0x60; // Read opcode for result and status register X=8..31
 static const uint8_t spiopc_read_config = 0x40; // Readout of configuration register X=0..17
 
-class GPX2 {
-public:
-	GPX2();
-	~GPX2();
+namespace GPX2_TDC {
 
-	Config config;
+	class GPX2 {
+	public:
+		GPX2();
+		~GPX2();
 
-	void power_on_reset();
-	void init_reset();
-	bool write_config();
-	bool write_config(Config data);
-	bool write_config(std::string data);
-	bool write_config(uint8_t reg_addr, uint8_t data);
-	std::string read_config();
-	uint8_t read_config(uint8_t reg_addr);
-	std::string read_results();
+		Config config;
 
-	bool writeSpi(uint8_t command, std::string data);
-	std::string readSpi(uint8_t command, unsigned int bytesToRead);
-	bool isSpiInitialised();
-private:
-	int pi = -1;
-	int spiHandle = -1;
-	unsigned int spi_freq = 61035;
-	uint32_t spi_flags = 0;
-	bool spiInitialised = false;
+		void power_on_reset();
+		void init_reset();
+		bool write_config();
+		bool write_config(Config data);
+		bool write_config(std::string data);
+		bool write_config(uint8_t reg_addr, uint8_t data);
+		std::string read_config();
+		uint8_t read_config(uint8_t reg_addr);
+		std::string read_results();
 
-	bool spiInitialise();
-};
+		bool writeSpi(uint8_t command, std::string data);
+		std::string readSpi(uint8_t command, unsigned int bytesToRead);
+		bool isSpiInitialised();
+	private:
+		int pi = -1;
+		int spiHandle = -1;
+		unsigned int spi_freq = 61035;
+		uint32_t spi_flags = 0;
+		bool spiInitialised = false;
 
+		bool spiInitialise();
+	};
+}
 #endif // !GPX2_H

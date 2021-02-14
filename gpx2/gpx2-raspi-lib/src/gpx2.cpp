@@ -6,6 +6,8 @@ extern "C" {
 #include <pigpiod_if2.h>
 }
 
+using namespace GPX2_TDC;
+
 GPX2::GPX2() {
 	pi = pigpio_start((char*)"127.0.0.1", (char*)"8888");
 	if (pi < 0) {
