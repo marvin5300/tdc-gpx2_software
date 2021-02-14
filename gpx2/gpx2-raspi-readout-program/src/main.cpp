@@ -1,10 +1,11 @@
 #include "gpx2.h"
 #include <string>
 #include <iostream>
+#include <iomanip>
 
 void print_hex(std::string str) {
 	for (auto byte : str) {
-		std::cout << std::hex << static_cast<unsigned int>(byte) << " ";
+		std::cout << std::hex << std::setw(2) << std::setfill('0') <<  static_cast<unsigned int>(byte) << " ";
 	}
 	std::cout << std::endl;
 }
