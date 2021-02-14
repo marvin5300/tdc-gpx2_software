@@ -51,8 +51,8 @@ bool GPX2::write_config(Config data) {
 }
 
 bool GPX2::write_config(std::string data) {
-	if (data.size() != 18) {
-		std::cerr << "write all of the config only possible if 18 bytes of data provided\n";
+	if (data.size() != 16) {
+		std::cerr << "write all of the config only possible if 16 bytes of data provided\n";
 		return false;
 	}
 	return writeSpi(spiopc_write_config, data);
