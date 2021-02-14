@@ -45,6 +45,7 @@ target_include_directories(readout PUBLIC
 target_link_directories(readout PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/../lib/")
 target_link_libraries(readout
     gpx2_static
+    pigpiod_if2
 )
 
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")

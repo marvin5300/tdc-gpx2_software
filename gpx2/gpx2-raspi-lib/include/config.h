@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <string>
+
 namespace GPX2_TDC {
 	struct Config {
 		// reg_addr 0

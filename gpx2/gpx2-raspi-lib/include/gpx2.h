@@ -5,13 +5,13 @@
 #include <stdint.h>
 #include <string>
 
+namespace GPX2_TDC {
+
 static const uint8_t spiopc_power = 0x30; // Power on reset and stop measurement
 static const uint8_t spiopc_init = 0x18; // Initializes Chip and starts measurement
 static const uint8_t spiopc_write_config = 0x80; // Write to configuration register X=0..17
 static const uint8_t spiopc_read_results = 0x60; // Read opcode for result and status register X=8..31
 static const uint8_t spiopc_read_config = 0x40; // Readout of configuration register X=0..17
-
-namespace GPX2_TDC {
 
 	class GPX2 {
 	public:

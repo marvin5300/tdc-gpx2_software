@@ -116,7 +116,6 @@ bool GPX2::writeSpi(uint8_t command, std::string data) {
 		return false;
 	}
 
-
 	free(txBuf);
 	free(rxBuf);
 	return status;
@@ -139,9 +138,11 @@ std::string GPX2::readSpi(uint8_t command, unsigned int bytesToRead) {
 	if (status != static_cast<long int>(1 + bytesToRead)) {
 		if (status == PI_BAD_HANDLE) {
 			std::cerr << "readSpi(...) : PI_BAD_HANDLE\n";
-		}else if (status == PI_SPI_XFER_FAILED) {
+		}
+		else if (status == PI_SPI_XFER_FAILED) {
 			std::cerr << "readSpi(...) : PI_SPI_XFER_FAILED\n";
-		}else if (status == PI_BAD_SPI_COUNT) {
+		}
+		else if (status == PI_BAD_SPI_COUNT) {
 			std::cerr << "readSpi(...) : PI_BAD_SPI_COUNT\n";
 		}
 		else {
