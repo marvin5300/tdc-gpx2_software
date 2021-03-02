@@ -37,7 +37,7 @@ static const uint8_t spiopc_read_config = 0x40; // Readout of configuration regi
 		int pi = -1;
 		int spiHandle = -1;
 		unsigned int spi_freq = 61035;
-		uint32_t spi_flags = 0b1;
+		uint32_t spi_flags = 0b10;
 		bool spiInitialised = false;
 
 		bool spiInitialise();

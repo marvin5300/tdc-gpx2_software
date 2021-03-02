@@ -31,8 +31,9 @@ int main() {
 	uint8_t confRegID = 0;
 	std::string conf_str = conf.str();
 	std::cout << "trying to write config reg " << confRegID << std::endl;
-	print_hex(std::string({static_cast<char>(conf_str[confRegID])}));
-	bool status = gpx2.write_config(confRegID, conf_str[confRegID]);
+	uint8_t conf_byte = (uint8_t)conf_str[confRegID];
+	print_hex(std::string({conf_str[confRegID]}));
+	bool status = gpx2.write_config(confRegID, conf_byte);
 	if (status) {
 		std::cout << "config written..." << std::endl;
 	}

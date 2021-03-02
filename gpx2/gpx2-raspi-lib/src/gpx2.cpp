@@ -1,6 +1,7 @@
 #include "gpx2.h"
 #include "config.h"
 #include <iostream>
+#include <iomanip>
 
 extern "C" {
 #include <pigpiod_if2.h>
@@ -63,7 +64,7 @@ bool GPX2::write_config(uint8_t reg_addr, uint8_t data) {
 		std::cerr << "write config is only possible on register addr. 0...16\n";
 		return false;
 	}
-	std::string conf_str = "" + static_cast<char>(data);
+	std::string conf_str = std::string({static_cast<char>(data)});
 	return writeSpi(spiopc_write_config | reg_addr, conf_str);
 }
 
@@ -93,10 +94,15 @@ bool GPX2::writeSpi(uint8_t command, std::string data) {
 			return false;
 		}
 	}
-	const n = data.size() + 1;
-	std::string tx = "" + ((char)command) + data;
+	const unsigned n = data.size() + 1;
+	char txBuf[n];
+	txBuf[0] = (char)command;
+	for (unsigned i = 1; i < n; i++) {
+		txBuf[i] = data[i-1];
+	}
+
 	char rxBuf[n];
-	int status = spi_xfer(pi, spiHandle, tx.c_str(), rxBuf, n);
+	int status = spi_xfer(pi, spiHandle, txBuf, rxBuf, n);
 	if (status != static_cast<long int>(1 + data.size())) {
 		if (status == PI_BAD_HANDLE) {
 			std::cerr << "writeSpi(...) : PI_BAD_HANDLE\n";
@@ -124,7 +130,7 @@ std::string GPX2::readSpi(uint8_t command, const unsigned int bytesToRead) {
 	const char n = bytesToRead +1;
 
 	char txBuf[n];
-	for (unsigned i = 0; i < n){
+	for (unsigned i = 0; i < n; i++){
 		txBuf[i] = 0;
 	}
 	txBuf[0] = (char)command;
