@@ -31,7 +31,7 @@ int main() {
 	uint8_t confRegID = 0;
 	std::string conf_str = conf.str();
 	std::cout << "trying to write config reg " << confRegID << std::endl;
-	print_hex(""+conf_str[confRegID]);
+	print_hex(std::string({static_cast<char>(conf_str[confRegID])});
 	bool status = gpx2.write_config(confRegID, conf_str[confRegID]);
 	if (status) {
 		std::cout << "config written..." << std::endl;
@@ -41,5 +41,5 @@ int main() {
 		exit(-1);
 	}
 	uint8_t config = gpx2.read_config(confRegID);
-	print_hex(""+static_cast<char>(config));
+	print_hex(std::string({static_cast<char>(config)}));
 }
