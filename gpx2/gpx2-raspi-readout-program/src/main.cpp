@@ -40,6 +40,6 @@ int main() {
 		std::cout << "failed to write config!" << std::endl;
 		exit(-1);
 	}
-	std::string config = gpx2.read_config(confRegID);
-	print_hex(config);
+	uint8_t config = gpx2.read_config(confRegID);
+	print_hex(""+static_cast<char>(config));
 }
