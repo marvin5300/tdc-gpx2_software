@@ -72,7 +72,7 @@ std::string GPX2::read_config() {
 }
 
 uint8_t GPX2::read_config(uint8_t reg_addr) {
-	if (reg_addr > 17) {
+	if (reg_addr > 16) {
 		std::cerr << "read config is only possible on register addr. 0...16\n";
 		return 0;
 	}
@@ -93,14 +93,10 @@ bool GPX2::writeSpi(uint8_t command, std::string data) {
 			return false;
 		}
 	}
-	std::string tx = ((char)command) + data;
-	char* txBuf = (char*)malloc(data.size() + 1);
-	txBuf[0] = (char)command;
-	for (unsigned int i = 1; i < data.size() + 1; i++) {
-		txBuf[i] = data[i - 1];
-	}
-	char* rxBuf = (char*)malloc(data.size() + 1);
-	int status = spi_xfer(pi, spiHandle, txBuf, rxBuf, data.size() + 1);
+	const n = data.size() + 1;
+	std::string tx = "" + ((char)command) + data;
+	char rxBuf[n];
+	int status = spi_xfer(pi, spiHandle, tx.c_str(), rxBuf, n);
 	if (status != static_cast<long int>(1 + data.size())) {
 		if (status == PI_BAD_HANDLE) {
 			std::cerr << "writeSpi(...) : PI_BAD_HANDLE\n";
@@ -116,27 +112,26 @@ bool GPX2::writeSpi(uint8_t command, std::string data) {
 		}
 		return false;
 	}
-
-	free(txBuf);
-	free(rxBuf);
 	return status;
 }
 
-std::string GPX2::readSpi(uint8_t command, unsigned int bytesToRead) {
+std::string GPX2::readSpi(uint8_t command, const unsigned int bytesToRead) {
 	if (!spiInitialised) {
 		if (!spiInitialise()) {
 			return "";
 		}
 	}
+	const char n = bytesToRead +1;
 
-	char* rxBuf = (char*)malloc(bytesToRead + 1);
-	char* txBuf = (char*)malloc(bytesToRead + 1);
-	txBuf[0] = (char)command;
-	for (unsigned int i = 1; i < bytesToRead; i++) {
+	char txBuf[n];
+	for (unsigned i = 0; i < n){
 		txBuf[i] = 0;
 	}
-	int status = spi_xfer(pi, spiHandle, txBuf, rxBuf, bytesToRead + 1);
-	if (status != static_cast<long int>(1 + bytesToRead)) {
+	txBuf[0] = (char)command;
+
+	char rxBuf[n];
+	int status = spi_xfer(pi, spiHandle, txBuf, rxBuf, n);
+	if (status != static_cast<long int>(n)) {
 		if (status == PI_BAD_HANDLE) {
 			std::cerr << "readSpi(...) : PI_BAD_HANDLE\n";
 		}
@@ -153,11 +148,9 @@ std::string GPX2::readSpi(uint8_t command, unsigned int bytesToRead) {
 	}
 
 	std::string data;
-	for (unsigned int i = 1; i < bytesToRead + 1; i++) {
+	for (unsigned int i = 1; i < n; i++) {
 		data += rxBuf[i];
 	}
-	free(txBuf);
-	free(rxBuf);
 	return data;
 }
 
