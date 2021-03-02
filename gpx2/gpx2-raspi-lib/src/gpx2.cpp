@@ -71,6 +71,11 @@ std::string GPX2::read_config() {
 	return readSpi(spiopc_read_config, 17);
 }
 
+std::string GPX2::read_config(uint8_t reg_addr) {
+	uint8_t data = read_config(reg_addr);
+	return ""+static_cast<char>(data);
+}
+
 uint8_t GPX2::read_config(uint8_t reg_addr) {
 	if (reg_addr > 17) {
 		std::cerr << "read config is only possible on register addr. 0...16\n";

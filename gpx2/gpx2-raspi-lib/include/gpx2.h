@@ -27,6 +27,7 @@ static const uint8_t spiopc_read_config = 0x40; // Readout of configuration regi
 		bool write_config(std::string data);
 		bool write_config(uint8_t reg_addr, uint8_t data);
 		std::string read_config();
+		std::string read_config(uint8_t reg_addr);
 		uint8_t read_config(uint8_t reg_addr);
 		std::string read_results();
 
