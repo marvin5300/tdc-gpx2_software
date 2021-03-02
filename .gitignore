@@ -14,7 +14,7 @@
 *.pdf
 **/.vscode/
 **/.vs/
-**/figures/
+#**/figures/
 ## Intermediate documents:
 *.dvi
 *.xdv
