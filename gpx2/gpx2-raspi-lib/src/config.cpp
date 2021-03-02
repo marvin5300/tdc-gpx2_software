@@ -33,8 +33,10 @@ Config::Config() {
 	REFCLK_DIVISIONS_UPPER = 0x03; // 200,000 = 0x030d40
 
 	LVDS_TEST_PATTERN = 0;
-	LVDS_DATA_VALID_ADJUST = 1;
 	REFCLK_BY_XOSC = 1; // use external quartz, ignore external clock => 1
+	LVDS_DATA_VALID_ADJUST = 1;
+	
+	CMOS_INPUT = 1;
 }
 
 // pack bits in the correct order and return a string.
@@ -89,7 +91,7 @@ std::string Config::str() {
 	data += static_cast<char>(0b11110001);
 	data += static_cast<char>(0b01111101);
 
-	byte = CMOS_INPUT << 2;
+	byte = (CMOS_INPUT << 2);
 	data += static_cast<char>(byte);
 	return data;
 }
