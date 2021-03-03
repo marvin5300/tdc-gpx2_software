@@ -38,16 +38,16 @@ bool spiDevice::init(std::string busAddress, std::uint32_t speed, Mode mode, uin
 
 	// enum class spi_mode -> csyle spi_mode
 	switch (mode) {
-	case Mode::SPI_MODE_0:
+	case Mode::spi_mode_0:
 		fMode = SPI_MODE_0;
 		break;
-	case Mode::SPI_MODE_1:
+	case Mode::spi_mode_1:
 		fMode = SPI_MODE_1;
 		break;
-	case Mode::SPI_MODE_2:
+	case Mode::spi_mode_2:
 		fMode = SPI_MODE_2;
 		break;
-	case Mode::SPI_MODE_3:
+	case Mode::spi_mode_3:
 		fMode = SPI_MODE_3;
 		break;
 	default:

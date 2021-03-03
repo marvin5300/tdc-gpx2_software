@@ -6,10 +6,10 @@
 
 namespace SPI {
 	enum class Mode {
-		SPI_MODE_0,
-		SPI_MODE_1,
-		SPI_MODE_2,
-		SPI_MODE_3
+		spi_mode_0,
+		spi_mode_1,
+		spi_mode_2,
+		spi_mode_3
 	};
 
 	class spiDevice {
