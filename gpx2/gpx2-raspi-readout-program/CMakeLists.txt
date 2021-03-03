@@ -16,8 +16,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
-find_library(PIGPIOD_IF2 pigpiod_if2 REQUIRED)
-
 add_compile_options(
     -Wall
     -Wextra
@@ -44,8 +42,7 @@ target_include_directories(readout PUBLIC
 
 target_link_directories(readout PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/../lib/")
 target_link_libraries(readout
-    gpx2_static
-    pigpiod_if2
+    spi_static
 )
 
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")

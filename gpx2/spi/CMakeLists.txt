@@ -75,10 +75,6 @@ target_include_directories(spi_objlib PUBLIC
 
 set_property(TARGET spi_objlib PROPERTY POSITION_INDEPENDENT_CODE 1)
 
-target_link_libraries(spi_objlib
-    pigpiod_if2
-)
-
 #set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
 #set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
 
