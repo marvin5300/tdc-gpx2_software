@@ -17,7 +17,7 @@ namespace SPI {
 		spiDevice();
 		~spiDevice();
 
-		auto init(std::string busAddress = "/dev/spidev0.0", std::uint32_t speed = 61035, Mode mode = Mode::SPI_MODE_0, uint8_t bits = 8)->bool;
+		auto init(std::string busAddress = "/dev/spidev0.0", std::uint32_t speed = 61035, Mode mode = Mode::spi_mode_0, uint8_t bits = 8)->bool;
 
 		/**
 		* Writes to physical device
