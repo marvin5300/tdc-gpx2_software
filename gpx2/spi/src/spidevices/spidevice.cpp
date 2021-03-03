@@ -32,14 +32,34 @@ spiDevice::~spiDevice() {
 	}
 }
 
-bool spiDevice::init(std::string busAddress) {
+bool spiDevice::init(std::string busAddress, std::uint32_t speed, Mode mode, uint8_t bits) {
+	fNrBits = bits;
+	fSpeed = speed;
+
+	// enum class spi_mode -> csyle spi_mode
+	switch (mode) {
+	case Mode::SPI_MODE_0:
+		fMode = SPI_MODE_0;
+		break;
+	case Mode::SPI_MODE_1:
+		fMode = SPI_MODE_1;
+		break;
+	case Mode::SPI_MODE_2:
+		fMode = SPI_MODE_2;
+		break;
+	case Mode::SPI_MODE_3:
+		fMode = SPI_MODE_3;
+		break;
+	default:
+		fMode = SPI_MODE_0;
+		break;
+	}
+
 	fHandle = open(busAddress.c_str(), O_RDWR);
-	fMode = SPI_MODE_2;
 	if (fHandle < 0) {
 		std::cerr << "Could not open spi device" << std::endl;
 		return false;
 	}
-
 	fNrDevices++;
 	fGlobalDeviceList.push_back(this);
 
@@ -57,11 +77,9 @@ bool spiDevice::init(std::string busAddress) {
 		std::cerr << "can't get spi mode" << std::endl;
 	}
 
-
 	/*
 	 * bits per word
 	*/
-	const std::uint8_t bits = 8;
 	ret = ioctl(fHandle, SPI_IOC_WR_BITS_PER_WORD, &bits);
 	if (ret == -1) {
 		std::cerr << "can't set bits per word" << std::endl;
@@ -107,8 +125,10 @@ bool spiDevice::write(const std::uint8_t command, const std::string& data) {
 		txBuf[i] = data[i - 1];
 	}
 
-	auto status = spi_xfer(fHandle, fSpeed, fNrBits, txBuf.get(), rxBuf.get(), n);
-	std::cout << "spi_xfer returned " << status << std::endl;
+	auto status = spi_xfer(fHandle, fSpeed, fMode, fNrBits, txBuf.get(), rxBuf.get(), n);
+	if (status != static_cast<decltype(status)>(n)) {
+		std::cerr << "transfer size mismatch: spi_xfer returned " << status << " bytes transfered but should write" << n << " bytes." << std::endl;
+	}
 	return status;
 }
 
@@ -123,8 +143,10 @@ std::string spiDevice::read(const std::uint8_t command, const std::size_t nBytes
 	auto rxBuf{ std::make_unique<std::uint8_t[]>(n) };
 	txBuf[0] = command;
 
-	auto status = spi_xfer(fHandle, fSpeed, fNrBits, txBuf.get(), rxBuf.get(), n);
-	std::cout << "spi_xfer returned " << status << std::endl;
+	auto status = spi_xfer(fHandle, fSpeed, fMode, fNrBits, txBuf.get(), rxBuf.get(), n);
+	if (status != static_cast<decltype(status)>(n)) {
+		std::cerr << "transfer size mismatch: spi_xfer returned " << status <<" bytes but should read" << n <<" bytes." << std::endl;
+	}
 	std::string data;
 	for (std::size_t i = 1; i < n; i++) {
 		data += rxBuf[i];
@@ -133,19 +155,11 @@ std::string spiDevice::read(const std::uint8_t command, const std::size_t nBytes
 }
 
 
-int spiDevice::spi_xfer(const int handle, const uint32_t speed, const uint8_t bits, uint8_t* tx, uint8_t* rx, uint32_t nBytes)
+int spiDevice::spi_xfer(const int handle, const uint32_t speed, const uint8_t mode, const uint8_t bits, uint8_t* tx, uint8_t* rx, uint32_t nBytes)
 {
 	int ret{};
 	uint16_t delay{};
 	spi_ioc_transfer tr = {
-		/*
-		.tx_buf = (unsigned long)tx,
-		.rx_buf = (unsigned long)rx,
-		.len = nBytes,
-		.delay_usecs = delay,
-		.speed_hz = speed,
-		.bits_per_word = bits,
-		*/
 		(unsigned long)tx, // tx_buf
 		(unsigned long)rx, // rx_buf
 		nBytes, // len
@@ -155,10 +169,10 @@ int spiDevice::spi_xfer(const int handle, const uint32_t speed, const uint8_t bi
 		0, // cs_change
 		8, // rx_nbits
 		8, // tx_nbits
-		SPI_MODE_2 // mode
+		mode // mode
 		//0 // cs
 
-		/** 
+		/**
 		* Note:
 		* Depending on spidev version there are different parameters in struct
 		*/

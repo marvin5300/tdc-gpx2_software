@@ -6,6 +6,7 @@
 using namespace SPI::GPX2_TDC;
 
 void GPX2::init() {
+	spiDevice::init();
 	power_on_reset();
 }
 
