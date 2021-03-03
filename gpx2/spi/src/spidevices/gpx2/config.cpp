@@ -1,8 +1,8 @@
-#include "config.h"
+#include "spidevices/gpx2/config.h"
 #include <stdint.h>
 #include <string>
 
-using namespace GPX2_TDC;
+using namespace SPI::GPX2_TDC;
 
 // default config defined by the author of this program
 Config::Config()
