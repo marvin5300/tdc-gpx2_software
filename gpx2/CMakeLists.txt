@@ -6,7 +6,6 @@ option(BUILD_DOCS "Build doxygen files" OFF)
 
 set(CMAKE_BUILD_TYPE Release)
 message("${CMAKE_HOST_SYSTEM_PROCESSOR}")
-#add_subdirectory(gpx2-raspi-lib)
 add_subdirectory(spi)
 if (BUILD_TOOLS)
 add_subdirectory(gpx2-raspi-readout-program)
