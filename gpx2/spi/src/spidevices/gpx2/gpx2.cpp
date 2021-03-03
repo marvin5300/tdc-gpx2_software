@@ -5,8 +5,8 @@
 
 using namespace SPI::GPX2_TDC;
 
-void GPX2::init() {
-	spiDevice::init();
+void GPX2::init(std::string busAddress, std::uint32_t speed, Mode mode, std::uint8_t bits) {
+	spiDevice::init(busAddress, speed, mode, bits);
 	power_on_reset();
 }
 
