@@ -3,7 +3,7 @@
 #include <iostream>
 #include <iomanip>
 
-void print_hex(std::string str) {
+void print_hex(const std::string& str) {
 	for (auto byte : str) {
 		std::cout << std::hex << std::setw(2) << std::setfill('0') <<  static_cast<unsigned int>(byte) << " ";
 	}
@@ -11,8 +11,9 @@ void print_hex(std::string str) {
 }
 
 int main() {
-	GPX2_TDC::GPX2 gpx2;
-	GPX2_TDC::Config conf;
+	GPX2_TDC::GPX2 gpx2{};
+	GPX2_TDC::Config conf{};
+	conf.loadDefaultConfig();
 
 	std::cout << "trying to write config..." << std::endl;
 	print_hex(conf.str());
