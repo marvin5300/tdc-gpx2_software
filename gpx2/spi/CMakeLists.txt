@@ -55,11 +55,13 @@ configure_file(
 set(PROJECT_SOURCE_FILES
     "${PROJECT_SRC_DIR}/spidevices/spidevice.cpp"
     "${PROJECT_SRC_DIR}/spidevices/gpx2/gpx2.cpp"
+    "${PROJECT_SRC_DIR}/spidevices/gpx2/config.cpp"
 )
 
 set(PROJECT_HEADER_FILES
     "${PROJECT_HEADER_DIR}/spidevices/spidevice.h"
     "${PROJECT_HEADER_DIR}/spidevices/gpx2/gpx2.h"
+    "${PROJECT_HEADER_DIR}/spidevices/gpx2/config.h"
 )
 
 add_definitions(-Dspi_objlib_LIBRARY_EXPORT)
