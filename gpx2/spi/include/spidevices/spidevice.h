@@ -34,7 +34,7 @@ namespace SPI {
 		* @param byte
 		* @return
 		*/
-		virtual auto writeReg(const std::uint8_t regAddr, const std::uint8_t byte)->bool = 0;
+		//virtual auto writeReg(const std::uint8_t regAddr, const std::uint8_t byte)->bool = 0;
 
 		/**
 		* Reads one byte from a register
@@ -42,7 +42,7 @@ namespace SPI {
 		* @param byte
 		* @return
 		*/
-		virtual auto readReg(const std::uint8_t regAddr, std::uint8_t& byte)->bool = 0;
+		//virtual auto readReg(const std::uint8_t regAddr, std::uint8_t& byte)->bool = 0;
 
 		virtual auto devicePresent()->bool;
 

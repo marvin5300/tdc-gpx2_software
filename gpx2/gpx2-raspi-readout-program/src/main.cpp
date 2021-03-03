@@ -1,4 +1,4 @@
-#include "gpx2.h"
+#include "spidevices/gpx2/gpx2.h"
 #include <string>
 #include <iostream>
 #include <iomanip>
@@ -11,9 +11,11 @@ void print_hex(const std::string& str) {
 }
 
 int main() {
-	GPX2_TDC::GPX2 gpx2{};
-	GPX2_TDC::Config conf{};
+	SPI::GPX2_TDC::GPX2 gpx2{};
+	SPI::GPX2_TDC::Config conf{};
 	conf.loadDefaultConfig();
+
+	gpx2.init();
 
 	std::cout << "trying to write config..." << std::endl;
 	print_hex(conf.str());
