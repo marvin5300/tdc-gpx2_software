@@ -32,7 +32,7 @@ spiDevice::~spiDevice() {
 	}
 }
 
-bool spiDevice::init(std::string busAddress, std::uint32_t speed, Mode mode, uint8_t bits) {
+auto spiDevice::init(std::string busAddress, std::uint32_t speed, Mode mode, uint8_t bits)->bool {
 	fNrBits = bits;
 	fSpeed = speed;
 
@@ -107,11 +107,11 @@ bool spiDevice::init(std::string busAddress, std::uint32_t speed, Mode mode, uin
 	return true;
 }
 
-bool spiDevice::devicePresent() {
+auto spiDevice::devicePresent()->bool {
 	return false;
 }
 
-bool spiDevice::write(const std::uint8_t command, const std::string& data) {
+auto spiDevice::write(const std::uint8_t command, const std::string& data)->bool {
 	if (fHandle==-1) {
 		std::cerr << "tried to write to spi without initialising (calling init(..) first)." << std::endl;
 		return false;
@@ -128,11 +128,12 @@ bool spiDevice::write(const std::uint8_t command, const std::string& data) {
 	auto status = spi_xfer(fHandle, fSpeed, fMode, fNrBits, txBuf.get(), rxBuf.get(), n);
 	if (status != static_cast<decltype(status)>(n)) {
 		std::cerr << "transfer size mismatch: spi_xfer returned " << status << " bytes transfered but should write" << n << " bytes." << std::endl;
+		return false;
 	}
-	return status;
+	return true;
 }
 
-std::string spiDevice::read(const std::uint8_t command, const std::size_t nBytes) {
+auto spiDevice::read(const std::uint8_t command, const std::size_t nBytes)->std::string {
 	if (fHandle == -1) {
 		std::cerr << "tried to read from spi without initialising." << std::endl;
 		return "";
@@ -146,6 +147,7 @@ std::string spiDevice::read(const std::uint8_t command, const std::size_t nBytes
 	auto status = spi_xfer(fHandle, fSpeed, fMode, fNrBits, txBuf.get(), rxBuf.get(), n);
 	if (status != static_cast<decltype(status)>(n)) {
 		std::cerr << "transfer size mismatch: spi_xfer returned " << status <<" bytes but should read" << n <<" bytes." << std::endl;
+		return "";
 	}
 	std::string data;
 	for (std::size_t i = 1; i < n; i++) {
@@ -155,8 +157,7 @@ std::string spiDevice::read(const std::uint8_t command, const std::size_t nBytes
 }
 
 
-int spiDevice::spi_xfer(const int handle, const uint32_t speed, const uint8_t mode, const uint8_t bits, uint8_t* tx, uint8_t* rx, uint32_t nBytes)
-{
+auto spiDevice::spi_xfer(const int handle, const uint32_t speed, const uint8_t mode, const uint8_t bits, uint8_t* tx, uint8_t* rx, uint32_t nBytes)->int {
 	int ret{};
 	uint16_t delay{};
 	spi_ioc_transfer tr = {

@@ -19,7 +19,7 @@ GpiodHandler::~GpiodHandler() {
 	gpiod_chip_close(chip);
 }
 
-bool GpiodHandler::init(const std::vector<unsigned int>& gpioPins) {
+auto GpiodHandler::init(const std::vector<unsigned int>& gpioPins)->bool {
 	//std::string chippath = "/dev/gpiochip0";
 	std::string chippath = "gpiochip0";
 	//chip.reset( gpiod_chip_open_by_name(chippath.c_str()));

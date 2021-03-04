@@ -81,7 +81,7 @@ void Config::loadDefaultConfig() {
 }
 
 // pack bits in the correct order and return a string.
-std::string Config::str() const {
+auto Config::str() const->std::string {
 	std::string data;
 	uint8_t byte;
 

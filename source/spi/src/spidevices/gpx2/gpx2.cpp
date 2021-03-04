@@ -18,15 +18,15 @@ void GPX2::init_reset() {
 	write(spiopc_init, "");
 }
 
-bool GPX2::write_config() {
+auto GPX2::write_config()->bool {
 	return write_config(config);
 }
 
-bool GPX2::write_config(const Config& data) {
+auto GPX2::write_config(const Config& data)->bool {
 	return write_config(data.str());
 }
 
-bool GPX2::write_config(const std::string& data) {
+auto GPX2::write_config(const std::string& data)->bool {
 	if (data.size() != 17) {
 		std::cerr << "write all of the config only possible if 17 bytes of data provided\n";
 		return false;
@@ -34,7 +34,7 @@ bool GPX2::write_config(const std::string& data) {
 	return write(spiopc_write_config, data);
 }
 
-bool GPX2::write_config(const std::uint8_t reg_addr, const std::uint8_t data) {
+auto GPX2::write_config(const std::uint8_t reg_addr, const std::uint8_t data)->bool {
 	if (reg_addr > 16) {
 		std::cerr << "write config is only possible on register addr. 0...16\n";
 		return false;
@@ -43,11 +43,11 @@ bool GPX2::write_config(const std::uint8_t reg_addr, const std::uint8_t data) {
 	return write(spiopc_write_config | reg_addr, conf_str);
 }
 
-std::string GPX2::read_config() {
+auto GPX2::read_config()->std::string {
 	return read(spiopc_read_config, 17);
 }
 
-std::uint8_t GPX2::read_config(const std::uint8_t reg_addr) {
+auto GPX2::read_config(const std::uint8_t reg_addr)->std::uint8_t {
 	if (reg_addr > 16) {
 		std::cerr << "read config is only possible on register addr. 0...16\n";
 		return 0;
@@ -59,6 +59,6 @@ std::uint8_t GPX2::read_config(const std::uint8_t reg_addr) {
 	return data[0];
 }
 
-std::string GPX2::read_results() {
+auto GPX2::read_results()->std::string {
 	return read(spiopc_read_results | 0x08, 26);
 }

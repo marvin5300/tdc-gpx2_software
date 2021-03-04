@@ -10,7 +10,7 @@ void print_hex(const std::string& str) {
 	std::cout << std::endl;
 }
 
-int main() {
+auto main()->int{
 	SPI::GPX2_TDC::GPX2 gpx2{};
 	SPI::GPX2_TDC::Config conf{};
 	conf.loadDefaultConfig();
