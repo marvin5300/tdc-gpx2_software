@@ -1,5 +1,5 @@
 #include "spidevices/gpx2/config.h"
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 
 using namespace SPI::GPX2_TDC;
@@ -85,30 +85,30 @@ auto Config::str() const->std::string {
 	std::string data;
 	uint8_t byte;
 
-	byte = PIN_ENA_RSTIDX << 7;
-	byte |= PIN_ENA_DISABLE << 6;
-	byte |= PIN_ENA_LVDS_OUT << 5;
-	byte |= PIN_ENA_REFCLK << 4;
-	byte |= PIN_ENA_STOP4 << 3;
-	byte |= PIN_ENA_STOP3 << 2;
-	byte |= PIN_ENA_STOP2 << 1;
+	byte = PIN_ENA_RSTIDX << 7U;
+	byte |= PIN_ENA_DISABLE << 6U;
+	byte |= PIN_ENA_LVDS_OUT << 5U;
+	byte |= PIN_ENA_REFCLK << 4U;
+	byte |= PIN_ENA_STOP4 << 3U;
+	byte |= PIN_ENA_STOP3 << 2U;
+	byte |= PIN_ENA_STOP2 << 1U;
 	byte |= PIN_ENA_STOP1;
 
 	data += static_cast<char>(byte);
 
-	byte = HIGH_RESOLUTION << 6;
-	byte |= CHANNEL_COMBINE << 4;
-	byte |= HIT_ENA_STOP4 << 3;
-	byte |= HIT_ENA_STOP3 << 2;
-	byte |= HIT_ENA_STOP2 << 1;
+	byte = HIGH_RESOLUTION << 6U;
+	byte |= CHANNEL_COMBINE << 4U;
+	byte |= HIT_ENA_STOP4 << 3U;
+	byte |= HIT_ENA_STOP3 << 2U;
+	byte |= HIT_ENA_STOP2 << 1U;
 	byte |= HIT_ENA_STOP1;
 
 	data += static_cast<char>(byte);
 
-	byte = BLOCKWISE_FIFO_READ << 7;
-	byte |= COMMON_FIFO_READ << 6;
-	byte |= LVS_DOUBLE_DATA_RATE << 5;
-	byte |= STOP_DATA_BITWIDTH << 3;
+	byte = BLOCKWISE_FIFO_READ << 7U;
+	byte |= COMMON_FIFO_READ << 6U;
+	byte |= LVS_DOUBLE_DATA_RATE << 5U;
+	byte |= STOP_DATA_BITWIDTH << 3U;
 	byte |= REF_INDEX_BITWIDTH;
 
 	data += static_cast<char>(byte);
@@ -117,26 +117,35 @@ auto Config::str() const->std::string {
 	data += REFCLK_DIVISIONS_MIDDLE;
 	data += REFCLK_DIVISIONS_UPPER;
 
-	byte = (static_cast<uint8_t>(0b110) << 5);
-	byte |= (static_cast<uint8_t>(LVDS_TEST_PATTERN) << 4);
+	byte = (static_cast<uint8_t>(0b110U) << 5U);
+	byte |= (LVDS_TEST_PATTERN << 4U);
 	data += static_cast<char>(byte);
 
-	byte = (static_cast<uint8_t>(REFCLK_BY_XOSC) << 8);
-	byte |= (static_cast<uint8_t>(0b1) << 7);
-	byte |= (static_cast<uint8_t>(LVDS_DATA_VALID_ADJUST) << 4);
-	byte |= static_cast<uint8_t>(0b0011);
+	byte = REFCLK_BY_XOSC << 8U;
+	byte |= (static_cast<uint8_t>(0b1U) << 7U);
+	byte |= LVDS_DATA_VALID_ADJUST << 4U;
+	byte |= static_cast<uint8_t>(0b0011U);
 	data += static_cast<char>(byte);
 
-	data += static_cast<char>(0b10100001);
-	data += static_cast<char>(0b00010011);
-	data += static_cast<char>(0b00000000);
-	data += static_cast<char>(0b00001010);
-	data += static_cast<char>(0b11001100);
-	data += static_cast<char>(0b11001100);
-	data += static_cast<char>(0b11110001);
-	data += static_cast<char>(0b01111101);
+	constexpr uint8_t reg_default_08 = 0b10100001U;
+	constexpr uint8_t reg_default_09 = 0b00010011U;
+	constexpr uint8_t reg_default_10 = 0b00000000U;
+	constexpr uint8_t reg_default_11 = 0b00001010U;
+	constexpr uint8_t reg_default_12 = 0b11001100U;
+	constexpr uint8_t reg_default_13 = 0b11001100U;
+	constexpr uint8_t reg_default_14 = 0b11110001U;
+	constexpr uint8_t reg_default_15 = 0b01111101U;
 
-	byte = (static_cast<uint8_t>(CMOS_INPUT) << 2);
+	data += static_cast<char>(reg_default_08);
+	data += static_cast<char>(reg_default_09);
+	data += static_cast<char>(reg_default_10);
+	data += static_cast<char>(reg_default_11);
+	data += static_cast<char>(reg_default_12);
+	data += static_cast<char>(reg_default_13);
+	data += static_cast<char>(reg_default_14);
+	data += static_cast<char>(reg_default_15);
+
+	byte = ((CMOS_INPUT) << 2U);
 	data += static_cast<char>(byte);
 	return data;
 }
