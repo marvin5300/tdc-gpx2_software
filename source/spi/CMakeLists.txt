@@ -17,6 +17,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
+if(${BUILD_TIDY})
+    set(CMAKE_CXX_CLANG_TIDY
+      clang-tidy;
+      -header-filter=^global;
+      -checks=-*,readability-*,bugprone-*,performace-*,clang-analyzer-*,modernize-*,hicpp-*;
+    )
+endif(${BUILD_TIDY})
+
 # check if Doxygen is installed (from https://vicrucann.github.io/tutorials/quick-cmake-doxygen/)
 find_package(Doxygen)
 if (DOXYGEN_FOUND AND BUILD_DOCS)

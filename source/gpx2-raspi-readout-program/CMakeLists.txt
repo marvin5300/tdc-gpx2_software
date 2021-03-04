@@ -16,6 +16,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
+if(${BUILD_TIDY})
+    set(CMAKE_CXX_CLANG_TIDY
+      clang-tidy;
+      -header-filter=^global;
+      -checks=-*,readability-*,bugprone-*,performace-*,clang-analyzer-*,modernize-*,hicpp-*;
+    )
+endif(${BUILD_TIDY})
+
 add_compile_options(
     -Wall
     -Wextra

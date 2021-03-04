@@ -113,7 +113,7 @@ bool spiDevice::devicePresent() {
 
 bool spiDevice::write(const std::uint8_t command, const std::string& data) {
 	if (fHandle==-1) {
-		std::cerr << "tried to write to spi without initialising." << std::endl;
+		std::cerr << "tried to write to spi without initialising (calling init(..) first)." << std::endl;
 		return false;
 	}
 	const std::size_t n = data.size() + 1;
@@ -167,8 +167,8 @@ int spiDevice::spi_xfer(const int handle, const uint32_t speed, const uint8_t mo
 		delay, // delay_usecs
 		bits, // bits_per_word
 		0, // cs_change
-		8, // rx_nbits
-		8, // tx_nbits
+		bits, // rx_nbits
+		bits, // tx_nbits
 		mode // mode
 		//0 // cs
 
