@@ -1,4 +1,5 @@
 #include "spidevices/gpx2/gpx2.h"
+#include "gpio.h"
 #include <string>
 #include <iostream>
 #include <iomanip>
@@ -9,6 +10,32 @@ void print_hex(const std::string& str) {
 	}
 	std::cout << std::endl;
 }
+
+void gpio_handle() {
+	gpio handler{};
+	gpio::setting conf{};
+	conf.gpio_pins = std::vector<std::size_t>{28};
+
+	auto callback = handler.list_callback(conf);
+
+
+	handler.start();
+
+	while (true) {
+
+		auto event = callback->wait(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::seconds {10}));
+
+		if (!event) {
+			break;
+		}
+	}
+
+
+	handler.stop();
+	handler.join();
+
+}
+
 
 auto main()->int{
 	SPI::GPX2_TDC::GPX2 gpx2{};

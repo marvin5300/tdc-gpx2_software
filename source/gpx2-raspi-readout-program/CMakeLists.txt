@@ -38,11 +38,11 @@ configure_file(
 )
 
 set(READOUT_HEADER_FILES
-    "${PROJECT_HEADER_DIR}/gpiodhandler.h"
+    "${PROJECT_HEADER_DIR}/gpio.h"
 )
 set(READOUT_SOURCE_FILES
     "${PROJECT_SRC_DIR}/main.cpp"
-    "${PROJECT_SRC_DIR}/gpiodhandler.cpp"
+    "${PROJECT_SRC_DIR}/gpio.cpp"
 )
 
 add_executable(readout ${READOUT_SOURCE_FILES} ${READOUT_HEADER_FILES})
