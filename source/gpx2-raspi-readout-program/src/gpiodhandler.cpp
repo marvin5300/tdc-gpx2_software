@@ -7,10 +7,6 @@ extern "C" {
 #include <gpiod.h>
 }
 
-GpiodHandler::GpiodHandler() {
-
-}
-
 GpiodHandler::~GpiodHandler() {
 	for (auto line : lines) {
 		gpiod_line_request_input(line, consumer);
@@ -33,7 +29,7 @@ auto GpiodHandler::init(const std::vector<unsigned int>& gpioPins)->bool {
 		//std::shared_ptr<struct gpiod_line> line = nullptr;
 		//line.reset( gpiod_chip_get_line(chip, pin) );
 		gpiod_line *line = gpiod_chip_get_line(chip, pin);
-		if (!line) {
+		if (line==nullptr) {
 			std::cerr << "Get line " << pin << " failed" << std::endl;
 		}
 		else {
@@ -43,6 +39,9 @@ auto GpiodHandler::init(const std::vector<unsigned int>& gpioPins)->bool {
 				0 // flags
 			};
 			ret = gpiod_line_request(line, & config, 0);
+			if (ret == -1) {
+				std::cerr << "Request for line " << pin << " did not work" << std::endl;
+			}
 			lines.push_back(line);
 		}
 	}

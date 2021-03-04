@@ -17,9 +17,6 @@ unsigned long int spiDevice::fGlobalNrBytesWritten{ 0 };
 unsigned long int spiDevice::fGlobalNrBytesRead{ 0 };
 std::vector<spiDevice*> spiDevice::fGlobalDeviceList;
 
-spiDevice::spiDevice() {
-}
-
 spiDevice::~spiDevice() {
 	if (fHandle > 0) {
 		fNrDevices--;

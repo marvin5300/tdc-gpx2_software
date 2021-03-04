@@ -117,10 +117,14 @@ auto Config::str() const->std::string {
 	data += REFCLK_DIVISIONS_MIDDLE;
 	data += REFCLK_DIVISIONS_UPPER;
 
-	byte = (0b110 << 5) | (LVDS_TEST_PATTERN << 4);
+	byte = (static_cast<uint8_t>(0b110) << 5);
+	byte |= (static_cast<uint8_t>(LVDS_TEST_PATTERN) << 4);
 	data += static_cast<char>(byte);
 
-	byte = (REFCLK_BY_XOSC << 8) | (0b1 << 7) | (LVDS_DATA_VALID_ADJUST << 4) | 0b0011;
+	byte = (static_cast<uint8_t>(REFCLK_BY_XOSC) << 8);
+	byte |= (static_cast<uint8_t>(0b1) << 7);
+	byte |= (static_cast<uint8_t>(LVDS_DATA_VALID_ADJUST) << 4);
+	byte |= static_cast<uint8_t>(0b0011);
 	data += static_cast<char>(byte);
 
 	data += static_cast<char>(0b10100001);
@@ -132,7 +136,7 @@ auto Config::str() const->std::string {
 	data += static_cast<char>(0b11110001);
 	data += static_cast<char>(0b01111101);
 
-	byte = (CMOS_INPUT << 2);
+	byte = (static_cast<uint8_t>(CMOS_INPUT) << 2);
 	data += static_cast<char>(byte);
 	return data;
 }

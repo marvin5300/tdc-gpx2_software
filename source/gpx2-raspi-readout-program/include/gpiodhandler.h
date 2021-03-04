@@ -15,7 +15,7 @@ enum class PinBias : std::uint8_t {
 };
 class GpiodHandler {
 public:
-	GpiodHandler();
+	GpiodHandler() = default;
 	~GpiodHandler();
 	auto init(const std::vector<unsigned int>& gpioPins)->bool;
 private:
