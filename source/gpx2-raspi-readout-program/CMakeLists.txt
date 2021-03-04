@@ -29,8 +29,12 @@ configure_file(
     "${PROJECT_HEADER_DIR}/version.h"
 )
 
+set(READOUT_HEADER_FILES
+    "${PROJECT_HEADER_DIR}/gpiodhandler.h"
+)
 set(READOUT_SOURCE_FILES
     "${PROJECT_SRC_DIR}/main.cpp"
+    "${PROJECT_SRC_DIR}/gpiodhandler.cpp"
 )
 
 add_executable(readout ${READOUT_SOURCE_FILES} ${READOUT_HEADER_FILES})
@@ -43,6 +47,7 @@ target_include_directories(readout PUBLIC
 target_link_directories(readout PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/../lib/")
 target_link_libraries(readout
     spi_static
+    gpiod
 )
 
 #set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")

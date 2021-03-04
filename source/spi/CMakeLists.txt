@@ -66,7 +66,13 @@ set(PROJECT_HEADER_FILES
 
 add_definitions(-Dspi_objlib_LIBRARY_EXPORT)
 
+find_library(LIBGPIOD libgpiod REQUIRED)
+
 add_library(spi_objlib OBJECT ${PROJECT_SOURCE_FILES} ${PROJECT_HEADER_FILES})
+
+target_link_libraries(spi_objlib
+    gpiod
+)
 
 add_library(spi SHARED $<TARGET_OBJECTS:spi_objlib>)
 add_library(spi_static STATIC $<TARGET_OBJECTS:spi_objlib>)
