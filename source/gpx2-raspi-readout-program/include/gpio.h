@@ -24,6 +24,8 @@ class gpio
 {
 
 public:
+    constexpr static unsigned int standard_timeout = 10;
+
     struct event
     {
         enum Type
@@ -102,7 +104,7 @@ private:
 
     std::future<int> m_result{};
 
-    std::chrono::milliseconds m_timeout{ 5U };
+    std::chrono::milliseconds m_timeout{ standard_timeout };
 
     std::atomic<bool> m_run{ true };
 

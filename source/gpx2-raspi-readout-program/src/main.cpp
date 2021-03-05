@@ -23,7 +23,7 @@ void gpio_handle() {
 
 	while (true) {
 
-		auto event = callback->wait(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::seconds {10}));
+		auto event = callback->wait(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::seconds {gpio::standard_timeout}));
 
 		std::cout << "gpio " << event.pin << std::endl;
 

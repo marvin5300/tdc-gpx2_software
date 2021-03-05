@@ -46,7 +46,8 @@ void Config::loadDefaultConfig() {
 	PIN_ENA_STOP1 = 1;
 
 	// reg_addr 1
-	HIGH_RESOLUTION = 2;
+	constexpr std::uint8_t high_resolution_mode_2 = 2;
+	HIGH_RESOLUTION = high_resolution_mode_2;
 	CHANNEL_COMBINE = 0;
 	HIT_ENA_STOP4 = 1;
 	HIT_ENA_STOP3 = 1;
@@ -54,20 +55,25 @@ void Config::loadDefaultConfig() {
 	HIT_ENA_STOP1 = 1;
 
 	// reg_addr 2
+	constexpr std::uint8_t stop_data_bitwidth_3 = 0b11;
+	constexpr std::uint8_t ref_index_bitwidth_2 = 0b010;
 	BLOCKWISE_FIFO_READ = 1;
 	COMMON_FIFO_READ = 1;
 	LVS_DOUBLE_DATA_RATE = 0;
-	STOP_DATA_BITWIDTH = 0b11;
-	REF_INDEX_BITWIDTH = 0b010;
+	STOP_DATA_BITWIDTH = stop_data_bitwidth_3;
+	REF_INDEX_BITWIDTH = ref_index_bitwidth_2;
 
 	// reg_addr 3
-	REFCLK_DIVISIONS_LOWER = 0x40;	// 5MHz clk => T = 200ns = 200,000ps
+	constexpr std::uint8_t refclk_div_200k_lower = 0x40;
+	REFCLK_DIVISIONS_LOWER = refclk_div_200k_lower;	// 5MHz clk => T = 200ns = 200,000ps
 
 	// reg_addr 4
-	REFCLK_DIVISIONS_MIDDLE = 0x0d;	// set REFCLK_DIVISIONS to 200,000 for LSB to be 1ps
+	constexpr std::uint8_t refclk_div_200k_middle = 0x0d;
+	REFCLK_DIVISIONS_MIDDLE = refclk_div_200k_middle;	// set REFCLK_DIVISIONS to 200,000 for LSB to be 1ps
 
 	// reg_addr 5
-	REFCLK_DIVISIONS_UPPER = 0x03; // 200,000 = 0x030d40
+	constexpr std::uint8_t refclk_div_200k_upper = 0x03;
+	REFCLK_DIVISIONS_UPPER = refclk_div_200k_upper; // 200,000 = 0x030d40
 
 	// reg_addr 6
 	LVDS_TEST_PATTERN = 0;
@@ -85,45 +91,45 @@ auto Config::str() const->std::string {
 	std::string data;
 	uint8_t byte;
 
-	byte = PIN_ENA_RSTIDX << 7U;
-	byte |= PIN_ENA_DISABLE << 6U;
-	byte |= PIN_ENA_LVDS_OUT << 5U;
-	byte |= PIN_ENA_REFCLK << 4U;
-	byte |= PIN_ENA_STOP4 << 3U;
-	byte |= PIN_ENA_STOP3 << 2U;
-	byte |= PIN_ENA_STOP2 << 1U;
-	byte |= PIN_ENA_STOP1;
+	byte = static_cast<uint8_t>(PIN_ENA_RSTIDX << 7U);
+	byte |= static_cast<uint8_t>(PIN_ENA_DISABLE << 6U);
+	byte |= static_cast<uint8_t>(PIN_ENA_LVDS_OUT << 5U);
+	byte |= static_cast<uint8_t>(PIN_ENA_REFCLK << 4U);
+	byte |= static_cast<uint8_t>(PIN_ENA_STOP4 << 3U);
+	byte |= static_cast<uint8_t>(PIN_ENA_STOP3 << 2U);
+	byte |= static_cast<uint8_t>(PIN_ENA_STOP2 << 1U);
+	byte |= static_cast<uint8_t>(PIN_ENA_STOP1);
 
 	data += static_cast<char>(byte);
 
-	byte = HIGH_RESOLUTION << 6U;
-	byte |= CHANNEL_COMBINE << 4U;
-	byte |= HIT_ENA_STOP4 << 3U;
-	byte |= HIT_ENA_STOP3 << 2U;
-	byte |= HIT_ENA_STOP2 << 1U;
-	byte |= HIT_ENA_STOP1;
+	byte = static_cast<uint8_t>(HIGH_RESOLUTION << 6U);
+	byte |= static_cast<uint8_t>(CHANNEL_COMBINE << 4U);
+	byte |= static_cast<uint8_t>(HIT_ENA_STOP4 << 3U);
+	byte |= static_cast<uint8_t>(HIT_ENA_STOP3 << 2U);
+	byte |= static_cast<uint8_t>(HIT_ENA_STOP2 << 1U);
+	byte |= static_cast<uint8_t>(HIT_ENA_STOP1);
 
 	data += static_cast<char>(byte);
 
-	byte = BLOCKWISE_FIFO_READ << 7U;
-	byte |= COMMON_FIFO_READ << 6U;
-	byte |= LVS_DOUBLE_DATA_RATE << 5U;
-	byte |= STOP_DATA_BITWIDTH << 3U;
-	byte |= REF_INDEX_BITWIDTH;
+	byte = static_cast<uint8_t>(BLOCKWISE_FIFO_READ << 7U);
+	byte |= static_cast<uint8_t>(COMMON_FIFO_READ << 6U);
+	byte |= static_cast<uint8_t>(LVS_DOUBLE_DATA_RATE << 5U);
+	byte |= static_cast<uint8_t>(STOP_DATA_BITWIDTH << 3U);
+	byte |= static_cast<uint8_t>(REF_INDEX_BITWIDTH);
 
 	data += static_cast<char>(byte);
 
-	data += REFCLK_DIVISIONS_LOWER;
-	data += REFCLK_DIVISIONS_MIDDLE;
-	data += REFCLK_DIVISIONS_UPPER;
+	data += static_cast<uint8_t>(REFCLK_DIVISIONS_LOWER);
+	data += static_cast<uint8_t>(REFCLK_DIVISIONS_MIDDLE);
+	data += static_cast<uint8_t>(REFCLK_DIVISIONS_UPPER);
 
-	byte = (static_cast<uint8_t>(0b110U) << 5U);
-	byte |= (LVDS_TEST_PATTERN << 4U);
+	byte = static_cast<uint8_t>(0b110U << 5U);
+	byte |= static_cast<uint8_t>(LVDS_TEST_PATTERN << 4U);
 	data += static_cast<char>(byte);
 
-	byte = REFCLK_BY_XOSC << 8U;
-	byte |= (static_cast<uint8_t>(0b1U) << 7U);
-	byte |= LVDS_DATA_VALID_ADJUST << 4U;
+	byte = static_cast<uint8_t>(REFCLK_BY_XOSC << 8U);
+	byte |= static_cast<uint8_t>(0b1U << 7U);
+	byte |= static_cast<uint8_t>(LVDS_DATA_VALID_ADJUST << 4U);
 	byte |= static_cast<uint8_t>(0b0011U);
 	data += static_cast<char>(byte);
 

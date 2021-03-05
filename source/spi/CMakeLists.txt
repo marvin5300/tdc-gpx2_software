@@ -21,7 +21,7 @@ if(${BUILD_TIDY})
     set(CMAKE_CXX_CLANG_TIDY
       clang-tidy;
       -header-filter=^global;
-      -checks=-*,readability-*,bugprone-*,performace-*,clang-analyzer-*,modernize-*,hicpp-*,-hicpp-vararg,-hicpp-avoid-c-arrays;
+      -checks=-*,readability-*,bugprone-*,performace-*,clang-analyzer-*,modernize-*,hicpp-*,-hicpp-vararg,-hicpp-avoid-c-arrays,-readability-magic-numbers;
     )
 endif(${BUILD_TIDY})
 

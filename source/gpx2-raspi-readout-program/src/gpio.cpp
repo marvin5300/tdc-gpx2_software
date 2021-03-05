@@ -74,7 +74,7 @@ auto gpio::list_callback(setting s) -> std::shared_ptr<callback>
 
 	m_settings.emplace_back(s);
 
-	m_callback.emplace(global_id_counter, std::make_shared<callback>(std::move(s),std::shared_ptr<gpio>(this)));
+	m_callback.emplace(global_id_counter, std::make_shared<callback>(std::move(s), std::shared_ptr<gpio>{this}));
 	global_id_counter++;
 
 	return m_callback[global_id_counter - 1U];
@@ -99,17 +99,12 @@ void gpio::notify_all(event e)
 auto gpio::setting::matches(const event& e)const -> bool {
 	// if pin of the event is in m_setting gpio_pins list then it matches
 	// maybe more efficient way of doing this
-	if (std::find(gpio_pins.begin(), gpio_pins.end(), e.pin) != gpio_pins.end()) {
-		return true;
-	}
-	else {
-		return false;
-	}
+	return (std::find(gpio_pins.begin(), gpio_pins.end(), e.pin) != gpio_pins.end());
 }
 
 gpio::callback::callback(setting s, std::shared_ptr<gpio> handler)
 	: m_setting{ std::move(s) }
-	, m_handler{ handler }
+	, m_handler{ std::move(handler) }
 {
 }
 
@@ -157,9 +152,9 @@ void gpio::callback::notify(const event& e)
 
 auto gpio::setup() -> int {
 	chip = gpiod_chip_open_by_name(chipname.c_str());
-	if (!chip) {
+	if (chip==nullptr) {
 		std::cerr << "Open gpio chip failed" << std::endl;
-		return false;
+		return -1;
 	}
 	int ret{};
 	std::vector<std::size_t> all_pins;
@@ -199,7 +194,7 @@ auto gpio::setup() -> int {
 			const char* consumer) GPIOD_API;
 		*/
 	}
-	return true;
+	return 0;
 }
 
 auto gpio::step() -> int
@@ -236,6 +231,9 @@ auto gpio::write(const event& e) -> bool
 		return false;
 	}
 	std::scoped_lock<std::mutex> lock{ m_gpio_mutex };
+	std::cout << "requested write pin " << e.pin << " to " << e.type;
+	//gpiod_line* line = 
+	//gpiod_line_set_value(line, 1);
 	//gpiod_line_request_output();
 
 	return true;
