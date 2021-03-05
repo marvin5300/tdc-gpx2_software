@@ -47,7 +47,7 @@ public:
     struct setting
     {
         [[nodiscard]] auto matches(const event& e) const -> bool;
-        std::vector<std::size_t> gpio_pins;
+        std::vector<unsigned int> gpio_pins;
     };
 
     class callback

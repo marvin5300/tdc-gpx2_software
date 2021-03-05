@@ -14,7 +14,7 @@ void print_hex(const std::string& str) {
 void gpio_handle() {
 	gpio handler{};
 	gpio::setting conf{};
-	conf.gpio_pins = std::vector<std::size_t>{28};
+	conf.gpio_pins = std::vector<unsigned int>{18};
 
 	auto callback = handler.list_callback(conf);
 
@@ -39,6 +39,8 @@ void gpio_handle() {
 
 
 auto main()->int{
+	gpio_handle();
+	/*
 	SPI::GPX2_TDC::GPX2 gpx2{};
 	SPI::GPX2_TDC::Config conf{};
 	conf.loadDefaultConfig();
@@ -57,5 +59,5 @@ auto main()->int{
 	}
 
 	std::string config = gpx2.read_config();
-	print_hex(config);
+	print_hex(config);*/
 }

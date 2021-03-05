@@ -27,15 +27,19 @@ void gpio::start()
 	}
 
 	m_result = std::async(std::launch::async, [&] {
+		std::cout << "before setup" << std::endl;
 		auto result{ setup() };
+		std::cout << "after setup" << std::endl;
 		if (result != 0) {
 			return result;
 		}
 		while (m_run) {
+			std::cout << "before step" << std::endl;
 			result = step();
 			if (result != 0) {
 				break;
 			}
+			std::cout << "after step" << std::endl;
 			std::this_thread::sleep_for(m_timeout);
 		}
 
@@ -142,13 +146,10 @@ void gpio::callback::notify(const event& e)
 	{
 		return;
 	}
-	{
-		std::unique_lock<std::shared_mutex> lock{ m_access_mutex };
-		m_event = e;
-	}
+	std::unique_lock<std::shared_mutex> lock{ m_access_mutex };
+	m_event = e;
 	m_wait.notify_all();
 }
-
 
 auto gpio::setup() -> int {
 	chip = gpiod_chip_open_by_name(chipname.c_str());
@@ -156,8 +157,7 @@ auto gpio::setup() -> int {
 		std::cerr << "Open gpio chip failed" << std::endl;
 		return -1;
 	}
-	int ret{};
-	std::vector<std::size_t> all_pins;
+	std::vector<unsigned int> all_pins;
 	for (auto s : m_settings) {
 		for (auto pin : s.gpio_pins) {
 			all_pins.push_back(pin);
@@ -165,52 +165,52 @@ auto gpio::setup() -> int {
 	}
 	std::sort(all_pins.begin(), all_pins.end());
 	all_pins.erase(std::unique(all_pins.begin(), all_pins.end()), all_pins.end());
-	for (auto pin : all_pins) {
-		//std::shared_ptr<gpiod_line> line{gpiod_chip_get_line(chip,pin)};
-		gpiod_line* line { gpiod_chip_get_line(chip,pin) };
-		if (line == nullptr) {
-			std::cerr << "Get line " << pin << " failed" << std::endl;
-		}
-		else {
-			gpiod_line_request_config config{
-				consumer.c_str() , // consumer
-				0, // request_type
-				0 // flags
-			};
-			ret = gpiod_line_request(line, &config, 0);
-			if (ret == -1) {
-				std::cerr << "Request for line " << pin << " did not work" << std::endl;
-			}
-			gpiod_line_bulk_add(lines, line);
-		}
 
-		int status = gpiod_line_request_bulk_both_edges_events(lines, consumer.c_str());
-		if (status==-1){
-			return status;
-		}
+	lines = new gpiod_line_bulk{};
+	gpiod_line_bulk_init(lines);
+	int status = gpiod_chip_get_lines(chip, all_pins.data(), all_pins.size(),lines);
+	if (status<0){
+		std::cerr << "Chip get lines failed" << std::endl;
+		return status;
+	}
+	status = gpiod_line_request_bulk_both_edges_events(lines, consumer.c_str());
+	if (status<0){
+		std::cerr << "Line request bulk both edges failed" << std::endl;
+		return status;
 	}
 	return 0;
 }
 
 auto gpio::step() -> int
 {
+	std::cout << "in step 1" << std::endl;
 	std::scoped_lock<std::mutex> lock{ m_gpio_mutex };
-	
-	gpiod_line_bulk fired{};
-	int status = gpiod_line_event_wait_bulk(lines, &c_wait_timeout, &fired);
+	gpiod_line_bulk* fired = new gpiod_line_bulk{};
+	gpiod_line_bulk_init(fired);
+	std::cout << "in step 2" << std::endl;
+	int status = gpiod_line_event_wait_bulk(lines, &c_wait_timeout, fired);
+	std::cout << "in step 3" << std::endl;
 	if (status <= 0){
 		//  0 -> timeout
 		// -1 -> error
+		if (fired!=nullptr){
+			delete fired;
+		}
 		return status;
 	}
-	for (unsigned i = 0; i < gpiod_line_bulk_num_lines(&fired); i++){
-		gpiod_line* line = gpiod_line_bulk_get_line(lines, i);
+	for (unsigned i = 0; i < gpiod_line_bulk_num_lines(fired); i++){
+		std::cout << "in step for loop " << i << std::endl;
+		gpiod_line* line = gpiod_line_bulk_get_line(fired, i);
 		gpiod_line_event gpio_e{};
 		status = gpiod_line_event_read(line, &gpio_e);
 		if (status!=0){
+			if (fired!=nullptr){
+				delete fired;
+			}
 			return status;
 		}
 		gpio::event e;
+		e.pin = gpiod_line_offset(line);
 		e.ts = gpio_e.ts;
 		if (gpio_e.event_type==GPIOD_LINE_EVENT_RISING_EDGE){
 			e.type = event::Type::Rising;
@@ -218,6 +218,10 @@ auto gpio::step() -> int
 			e.type = event::Type::Falling;
 		}
 		notify_all(e);
+		std::cout << "after notify all";
+	}
+	if (fired!=nullptr){
+		delete fired;
 	}
 	return 0;
 }
@@ -227,7 +231,9 @@ auto gpio::shutdown() -> int
 	gpiod_line_request_bulk_input(lines, consumer.c_str());
 	gpiod_line_release_bulk(lines);
 	gpiod_chip_close(chip);
-
+	if (lines != nullptr){
+		delete lines;
+	}
 	return 0;
 }
 
