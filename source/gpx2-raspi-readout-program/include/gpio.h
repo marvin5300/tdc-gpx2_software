@@ -9,6 +9,9 @@ extern "C" {
 #include <gpiod.h>
 }
 
+// TODO: check correctness of mutex'
+// TODO: implement and check init, step, shutdown, write functions
+
 enum class PinBias : std::uint8_t {
     OpenDrain = 0x01,
     OpenSource = 0x02,
@@ -46,6 +49,7 @@ public:
 
     class callback
     {
+        friend class gpio;
     public:
         [[nodiscard]] auto wait_async(std::chrono::milliseconds timeout)->std::future<event>;
         [[nodiscard]] auto wait(std::chrono::milliseconds timeout)->event;
@@ -53,17 +57,17 @@ public:
         [[nodiscard]] auto write_async(const event& e)->std::future<bool>;
         [[nodiscard]] auto write(const event& e) -> bool;
 
-        void notify(const event& e);
+        callback(setting s, std::shared_ptr<gpio> handler); // somehow can't put it in private because at some point std::make_shared<callback>(..) is called
 
     private:
-        callback(setting s, gpio& handler);
+        void notify(const event& e);
 
         setting m_setting{};
         event m_event {};
         std::condition_variable m_wait{};
-        std::shared_mutex m_wait_mutex{};
+        std::mutex m_wait_mutex{};
         std::shared_mutex m_access_mutex{};
-        gpio& m_handler;
+        std::shared_ptr<gpio> m_handler;
     };
 
     virtual ~gpio();
@@ -90,9 +94,10 @@ private:
     //std::unique_ptr<gpiod_chip> chip{};
     gpiod_chip* chip{};
     //std::vector<std::unique_ptr<gpiod_line_bulk> > lines{};
-    std::vector<gpiod_line_bulk*> lines{};
+    gpiod_line_bulk* lines{};
 
-    static std::size_t global_id_counter;
+    //inline static std::size_t global_id_counter{ 0 };
+    std::size_t global_id_counter{ 0 };
     std::map < std::size_t, std::shared_ptr<callback> >  m_callback{};
 
     std::future<int> m_result{};

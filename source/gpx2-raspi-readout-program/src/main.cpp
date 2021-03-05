@@ -25,6 +25,8 @@ void gpio_handle() {
 
 		auto event = callback->wait(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::seconds {10}));
 
+		std::cout << "gpio " << event.pin << std::endl;
+
 		if (!event) {
 			break;
 		}
@@ -33,7 +35,6 @@ void gpio_handle() {
 
 	handler.stop();
 	handler.join();
-
 }
 
 

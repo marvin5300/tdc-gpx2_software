@@ -19,8 +19,6 @@ struct gpiod_line_bulk {
 	};
 */
 
-std::size_t id{ 0U };
-
 void gpio::start()
 {
 	if (m_result.valid()) {
@@ -76,7 +74,7 @@ auto gpio::list_callback(setting s) -> std::shared_ptr<callback>
 
 	m_settings.emplace_back(s);
 
-	m_callback.emplace(global_id_counter, std::make_shared<callback>(std::move(s)));
+	m_callback.emplace(global_id_counter, std::make_shared<callback>(std::move(s),std::shared_ptr<gpio>(this)));
 	global_id_counter++;
 
 	return m_callback[global_id_counter - 1U];
@@ -109,7 +107,7 @@ auto gpio::setting::matches(const event& e)const -> bool {
 	}
 }
 
-gpio::callback::callback(setting s, gpio& handler)
+gpio::callback::callback(setting s, std::shared_ptr<gpio> handler)
 	: m_setting{ std::move(s) }
 	, m_handler{ handler }
 {
@@ -117,30 +115,30 @@ gpio::callback::callback(setting s, gpio& handler)
 
 auto gpio::callback::wait_async(std::chrono::milliseconds timeout) -> std::future<event>
 {
-	return std::async(std::launch::async, [&] {wait(timeout); });
+	return std::async(std::launch::async, [&] {return wait(timeout); });
 }
 
 auto gpio::callback::wait(std::chrono::milliseconds timeout) -> event
 {
 	{
-		std::shared_lock<std::shared_mutex> lock{ m_wait_mutex };
+		std::unique_lock<std::mutex> lock{ m_wait_mutex };
 
 		if (m_wait.wait_for(lock, timeout) == std::cv_status::timeout) {
 			return event{};
 		}
 	}
-	std::shared_lock<std::shared_mutex> lock{ m_access_mutex };
+	std::unique_lock<std::shared_mutex> lock{ m_access_mutex };
 	return m_event;
 }
 
 auto gpio::callback::write_async(const event& e) -> std::future<bool>
 {
-	return std::async(std::launch::async, [&] {write(e); });
+	return std::async(std::launch::async, [&] { return write(e); });
 }
 
 auto gpio::callback::write(const event& e) -> bool
 {
-	return m_handler.write(e);
+	return m_handler->write(e);
 }
 
 void gpio::callback::notify(const event& e)
@@ -157,8 +155,7 @@ void gpio::callback::notify(const event& e)
 }
 
 
-auto gpio::setup() -> int
-{
+auto gpio::setup() -> int {
 	chip = gpiod_chip_open_by_name(chipname.c_str());
 	if (!chip) {
 		std::cerr << "Open gpio chip failed" << std::endl;
@@ -195,6 +192,12 @@ auto gpio::setup() -> int
 			}
 			gpiod_line_bulk_add(lines, line);
 		}
+
+		/*
+		* request event listening on multiple lines
+		int gpiod_line_request_bulk_both_edges_events(struct gpiod_line_bulk* bulk,
+			const char* consumer) GPIOD_API;
+		*/
 	}
 	return true;
 }
@@ -202,7 +205,20 @@ auto gpio::setup() -> int
 auto gpio::step() -> int
 {
 	std::scoped_lock<std::mutex> lock{ m_gpio_mutex };
+	/*
+	here comes information what to do on each iteration
 
+	int gpiod_line_event_wait_bulk(struct gpiod_line_bulk *bulk,
+	const struct timespec *timeout,
+	struct gpiod_line_bulk *event_bulk) GPIOD_API;
+
+	int gpiod_line_event_read_multiple(struct gpiod_line *line,
+					   struct gpiod_line_event *events,
+					   unsigned int num_events) GPIOD_API;
+	https://github.com/starnight/libgpiod-example/blob/master/libgpiod-event/main.c
+	https ://github.com/starnight/libgpiod-example
+	*/
+	return 0;
 }
 
 auto gpio::shutdown() -> int
@@ -210,16 +226,17 @@ auto gpio::shutdown() -> int
 	gpiod_line_request_bulk_input(lines, consumer.c_str());
 	gpiod_line_release_bulk(lines);
 	gpiod_chip_close(chip);
+
+	return 0;
 }
 
 auto gpio::write(const event& e) -> bool
 {
-	if (!mresult.valid()) {
+	if (!m_result.valid()) {
 		return false;
 	}
 	std::scoped_lock<std::mutex> lock{ m_gpio_mutex };
+	//gpiod_line_request_output();
 
-
+	return true;
 }
-
-

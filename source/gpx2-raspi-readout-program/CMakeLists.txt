@@ -53,7 +53,13 @@ target_include_directories(readout PUBLIC
 )
 
 target_link_directories(readout PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/../lib/")
+
+find_library(LIBGPIOD libgpiod REQUIRED)
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
 target_link_libraries(readout
+    Threads::Threads
     spi_static
     gpiod
 )
