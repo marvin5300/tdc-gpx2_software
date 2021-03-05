@@ -7,9 +7,9 @@
 #include <memory>
 #include <iostream>
 #include <condition_variable>
-extern "C" {
 #include <gpiod.h>
-}
+#include <time.h>
+
 /*
 struct gpiod_line_bulk {
 	struct gpiod_line *lines[GPIOD_LINE_BULK_MAX_LINES];
@@ -91,8 +91,8 @@ void gpio::remove_callback(std::size_t id)
 
 void gpio::notify_all(event e)
 {
-	for (auto& [id, callback] : m_callback) {
-		callback->notify(e);
+	for (auto& [id, cb] : m_callback) {
+		cb->notify(e);
 	}
 }
 
@@ -161,17 +161,13 @@ auto gpio::setup() -> int {
 	for (auto s : m_settings) {
 		for (auto pin : s.gpio_pins) {
 			all_pins.push_back(pin);
-			/*if (std::find(all_pins.begin(), all_pins.end(), pin) == all_pins.end()) {
-				all_pins.push_back(pin);
-			}*/
 		}
 	}
 	std::sort(all_pins.begin(), all_pins.end());
 	all_pins.erase(std::unique(all_pins.begin(), all_pins.end()), all_pins.end());
 	for (auto pin : all_pins) {
-		//std::shared_ptr<struct gpiod_line> line = nullptr;
-		//line.reset( gpiod_chip_get_line(chip, pin) );
-		gpiod_line* line = gpiod_chip_get_line(chip, pin);
+		//std::shared_ptr<gpiod_line> line{gpiod_chip_get_line(chip,pin)};
+		gpiod_line* line { gpiod_chip_get_line(chip,pin) };
 		if (line == nullptr) {
 			std::cerr << "Get line " << pin << " failed" << std::endl;
 		}
@@ -188,11 +184,10 @@ auto gpio::setup() -> int {
 			gpiod_line_bulk_add(lines, line);
 		}
 
-		/*
-		* request event listening on multiple lines
-		int gpiod_line_request_bulk_both_edges_events(struct gpiod_line_bulk* bulk,
-			const char* consumer) GPIOD_API;
-		*/
+		int status = gpiod_line_request_bulk_both_edges_events(lines, consumer.c_str());
+		if (status==-1){
+			return status;
+		}
 	}
 	return 0;
 }
@@ -200,19 +195,30 @@ auto gpio::setup() -> int {
 auto gpio::step() -> int
 {
 	std::scoped_lock<std::mutex> lock{ m_gpio_mutex };
-	/*
-	here comes information what to do on each iteration
-
-	int gpiod_line_event_wait_bulk(struct gpiod_line_bulk *bulk,
-	const struct timespec *timeout,
-	struct gpiod_line_bulk *event_bulk) GPIOD_API;
-
-	int gpiod_line_event_read_multiple(struct gpiod_line *line,
-					   struct gpiod_line_event *events,
-					   unsigned int num_events) GPIOD_API;
-	https://github.com/starnight/libgpiod-example/blob/master/libgpiod-event/main.c
-	https ://github.com/starnight/libgpiod-example
-	*/
+	
+	gpiod_line_bulk fired{};
+	int status = gpiod_line_event_wait_bulk(lines, &c_wait_timeout, &fired);
+	if (status <= 0){
+		//  0 -> timeout
+		// -1 -> error
+		return status;
+	}
+	for (unsigned i = 0; i < gpiod_line_bulk_num_lines(&fired); i++){
+		gpiod_line* line = gpiod_line_bulk_get_line(lines, i);
+		gpiod_line_event gpio_e{};
+		status = gpiod_line_event_read(line, &gpio_e);
+		if (status!=0){
+			return status;
+		}
+		gpio::event e;
+		e.ts = gpio_e.ts;
+		if (gpio_e.event_type==GPIOD_LINE_EVENT_RISING_EDGE){
+			e.type = event::Type::Rising;
+		}else if (gpio_e.event_type==GPIOD_LINE_EVENT_RISING_EDGE){
+			e.type = event::Type::Falling;
+		}
+		notify_all(e);
+	}
 	return 0;
 }
 

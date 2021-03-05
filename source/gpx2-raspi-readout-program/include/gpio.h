@@ -5,9 +5,9 @@
 #include <chrono>
 #include <future>
 #include <map>
-extern "C" {
+#include <memory>
+#include <linux/gpio.h>
 #include <gpiod.h>
-}
 
 // TODO: check correctness of mutex'
 // TODO: implement and check init, step, shutdown, write functions
@@ -36,6 +36,7 @@ public:
         } type{ Invalid };
 
         std::size_t pin{};
+        timespec ts;
 
         operator bool()
         {
@@ -72,6 +73,10 @@ public:
         std::shared_ptr<gpio> m_handler;
     };
 
+    gpio(std::string _consumer = "gpio", std::string _chipname = "gpiochip0") 
+    : consumer{_consumer}
+    , chipname{_chipname}
+    {};
     virtual ~gpio();
 
     void start();
@@ -91,12 +96,15 @@ private:
 
     void notify_all(event e);
 
-    std::string consumer{ "gpio" };
-    std::string chipname{ "gpiochip0" };
-    //std::unique_ptr<gpiod_chip> chip{};
-    gpiod_chip* chip{};
-    //std::vector<std::unique_ptr<gpiod_line_bulk> > lines{};
-    gpiod_line_bulk* lines{};
+    std::string consumer;
+    std::string chipname;
+
+    const timespec c_wait_timeout{1,0};
+
+    //std::shared_ptr<::gpiod_chip> chip{nullptr};
+    //std::shared_ptr<::gpiod_line_bulk> lines{nullptr};
+    gpiod_chip* chip{nullptr};
+    gpiod_line_bulk* lines{nullptr};
 
     //inline static std::size_t global_id_counter{ 0 };
     std::size_t global_id_counter{ 0 };
