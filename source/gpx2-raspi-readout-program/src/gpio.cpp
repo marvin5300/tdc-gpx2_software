@@ -10,15 +10,6 @@
 #include <gpiod.h>
 #include <time.h>
 
-/*
-struct gpiod_line_bulk {
-	struct gpiod_line *lines[GPIOD_LINE_BULK_MAX_LINES];
-	//< Buffer for line pointers. //
-	unsigned int num_lines;
-	//< Number of lines currently held in this structure. //
-	};
-*/
-
 void gpio::start()
 {
 	if (m_result.valid()) {
@@ -27,19 +18,15 @@ void gpio::start()
 	}
 
 	m_result = std::async(std::launch::async, [&] {
-		std::cout << "before setup" << std::endl;
 		auto result{ setup() };
-		std::cout << "after setup" << std::endl;
 		if (result != 0) {
 			return result;
 		}
 		while (m_run) {
-			std::cout << "before step" << std::endl;
 			result = step();
 			if (result != 0) {
 				break;
 			}
-			std::cout << "after step" << std::endl;
 			std::this_thread::sleep_for(m_timeout);
 		}
 
@@ -78,7 +65,7 @@ auto gpio::list_callback(setting s) -> std::shared_ptr<callback>
 
 	m_settings.emplace_back(s);
 
-	m_callback.emplace(global_id_counter, std::make_shared<callback>(std::move(s), std::shared_ptr<gpio>{this}));
+	m_callback.emplace(global_id_counter, std::make_shared<callback>(std::move(s),*this));
 	global_id_counter++;
 
 	return m_callback[global_id_counter - 1U];
@@ -106,9 +93,9 @@ auto gpio::setting::matches(const event& e)const -> bool {
 	return (std::find(gpio_pins.begin(), gpio_pins.end(), e.pin) != gpio_pins.end());
 }
 
-gpio::callback::callback(setting s, std::shared_ptr<gpio> handler)
+gpio::callback::callback(setting s, gpio& handler)
 	: m_setting{ std::move(s) }
-	, m_handler{ std::move(handler) }
+	, m_handler{ handler }
 {
 }
 
@@ -137,7 +124,7 @@ auto gpio::callback::write_async(const event& e) -> std::future<bool>
 
 auto gpio::callback::write(const event& e) -> bool
 {
-	return m_handler->write(e);
+	return m_handler.write(e);
 }
 
 void gpio::callback::notify(const event& e)
@@ -183,23 +170,20 @@ auto gpio::setup() -> int {
 
 auto gpio::step() -> int
 {
-	std::cout << "in step 1" << std::endl;
 	std::scoped_lock<std::mutex> lock{ m_gpio_mutex };
 	gpiod_line_bulk* fired = new gpiod_line_bulk{};
 	gpiod_line_bulk_init(fired);
-	std::cout << "in step 2" << std::endl;
 	int status = gpiod_line_event_wait_bulk(lines, &c_wait_timeout, fired);
-	std::cout << "in step 3" << std::endl;
 	if (status <= 0){
 		//  0 -> timeout
 		// -1 -> error
 		if (fired!=nullptr){
 			delete fired;
 		}
+		std::cout << "leaving step, " << status << std::endl;
 		return status;
 	}
 	for (unsigned i = 0; i < gpiod_line_bulk_num_lines(fired); i++){
-		std::cout << "in step for loop " << i << std::endl;
 		gpiod_line* line = gpiod_line_bulk_get_line(fired, i);
 		gpiod_line_event gpio_e{};
 		status = gpiod_line_event_read(line, &gpio_e);
@@ -207,6 +191,7 @@ auto gpio::step() -> int
 			if (fired!=nullptr){
 				delete fired;
 			}
+			std::cout << "leaving step, line event read error" << std::endl;
 			return status;
 		}
 		gpio::event e;
@@ -214,11 +199,10 @@ auto gpio::step() -> int
 		e.ts = gpio_e.ts;
 		if (gpio_e.event_type==GPIOD_LINE_EVENT_RISING_EDGE){
 			e.type = event::Type::Rising;
-		}else if (gpio_e.event_type==GPIOD_LINE_EVENT_RISING_EDGE){
+		}else if (gpio_e.event_type==GPIOD_LINE_EVENT_FALLING_EDGE){
 			e.type = event::Type::Falling;
 		}
 		notify_all(e);
-		std::cout << "after notify all";
 	}
 	if (fired!=nullptr){
 		delete fired;
@@ -228,11 +212,16 @@ auto gpio::step() -> int
 
 auto gpio::shutdown() -> int
 {
-	gpiod_line_request_bulk_input(lines, consumer.c_str());
-	gpiod_line_release_bulk(lines);
-	gpiod_chip_close(chip);
 	if (lines != nullptr){
-		delete lines;
+		gpiod_line_request_bulk_input(lines, consumer.c_str());
+		gpiod_line_release_bulk(lines);
+		//delete lines;
+		lines = nullptr;
+	}
+	if (chip != nullptr){
+		gpiod_chip_close(chip);
+		//delete chip;
+		chip = nullptr;
 	}
 	return 0;
 }

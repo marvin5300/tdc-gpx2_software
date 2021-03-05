@@ -22,14 +22,17 @@ void gpio_handle() {
 	handler.start();
 
 	while (true) {
-
-		auto event = callback->wait(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::seconds {gpio::standard_timeout}));
-
-		std::cout << "gpio " << event.pin << std::endl;
-
+		auto event = callback->wait(std::chrono::milliseconds{10000});
 		if (!event) {
+			std::cout << "event was neither rising nor falling. This should not happen. Stopping." << std::endl;
 			break;
 		}
+		if (event.type == gpio::event::Rising){
+			std::cout << "gpio " << event.pin << " rising edge" << std::endl;
+		}
+		if (event.type == gpio::event::Falling){
+			std::cout << "gpio " << event.pin << " falling edge" << std::endl;
+		}		
 	}
 
 

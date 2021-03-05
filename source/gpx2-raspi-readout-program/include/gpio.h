@@ -24,7 +24,7 @@ class gpio
 {
 
 public:
-    constexpr static unsigned int standard_timeout = 10;
+    constexpr static auto standard_timeout = std::chrono::seconds{10};
 
     struct event
     {
@@ -38,7 +38,7 @@ public:
         std::size_t pin{};
         timespec ts;
 
-        operator bool()
+        inline operator bool()
         {
             return type != Invalid;
         }
@@ -60,7 +60,7 @@ public:
         [[nodiscard]] auto write_async(const event& e)->std::future<bool>;
         [[nodiscard]] auto write(const event& e) -> bool;
 
-        callback(setting s, std::shared_ptr<gpio> handler); // somehow can't put it in private because at some point std::make_shared<callback>(..) is called
+        callback(setting s, gpio& handler);
 
     private:
         void notify(const event& e);
@@ -70,7 +70,7 @@ public:
         std::condition_variable m_wait{};
         std::mutex m_wait_mutex{};
         std::shared_mutex m_access_mutex{};
-        std::shared_ptr<gpio> m_handler;
+        gpio& m_handler;
     };
 
     gpio(std::string _consumer = "gpio", std::string _chipname = "gpiochip0") 
@@ -112,7 +112,7 @@ private:
 
     std::future<int> m_result{};
 
-    std::chrono::milliseconds m_timeout{ standard_timeout };
+    std::chrono::microseconds m_timeout{ 10 };
 
     std::atomic<bool> m_run{ true };
 
