@@ -54,7 +54,7 @@ namespace SPI {
 		virtual auto devicePresent()->bool;
 
 	protected:
-		static auto spi_xfer(const int handle, const uint32_t speed, const uint8_t mode, const uint8_t bits, uint8_t* tx, uint8_t* rx, std::size_t nBytes)->int;
+		static auto spi_xfer(const int handle, const uint32_t speed, const uint8_t mode, const uint8_t bits, const uint8_t* tx, uint8_t* rx, uint32_t nBytes)->int;
 
 		int fHandle{ -1 };
 		unsigned long int fNrBytesWritten{ 0 };

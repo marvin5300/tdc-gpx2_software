@@ -154,7 +154,7 @@ auto spiDevice::read(const std::uint8_t command, const std::size_t nBytes)->std:
 }
 
 
-auto spiDevice::spi_xfer(const int handle, const uint32_t speed, const uint8_t mode, const uint8_t bits, uint8_t* tx, uint8_t* rx, uint32_t nBytes)->int {
+auto spiDevice::spi_xfer(const int handle, const uint32_t speed, const uint8_t mode, const uint8_t bits, const uint8_t* tx, uint8_t* rx, uint32_t nBytes)->int {
 	int ret{};
 	uint16_t delay{};
 	spi_ioc_transfer tr = {
