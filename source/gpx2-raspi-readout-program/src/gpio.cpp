@@ -180,7 +180,7 @@ auto gpio::step() -> int
 		if (fired!=nullptr){
 			delete fired;
 		}
-		std::cout << "leaving step, " << status << std::endl;
+		//std::cout << "leaving step, " << status << std::endl;
 		return status;
 	}
 	for (unsigned i = 0; i < gpiod_line_bulk_num_lines(fired); i++){

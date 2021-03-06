@@ -53,6 +53,8 @@ namespace SPI {
 
 			Config();
 			void loadDefaultConfig();
+			double refclk_freq{5e6};
+			uint32_t refclk_divisions();
 			std::string str() const;
 		};
 	}

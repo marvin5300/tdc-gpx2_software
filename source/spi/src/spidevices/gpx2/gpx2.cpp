@@ -23,6 +23,7 @@ auto GPX2::write_config()->bool {
 }
 
 auto GPX2::write_config(const Config& data)->bool {
+	config = data;
 	return write_config(data.str());
 }
 
@@ -59,6 +60,30 @@ auto GPX2::read_config(const std::uint8_t reg_addr)->std::uint8_t {
 	return data[0];
 }
 
-auto GPX2::read_results()->std::string {
-	return read(spiopc_read_results | 0x08, 26);
+auto GPX2::read_results()->std::vector<Meas> {
+	std::string readout = read(spiopc_read_results | 0x08, 26);
+	std::vector<Meas> measurements{};
+		if (readout.empty()){
+		return measurements;
+	}
+	double lsb_ps = 1e12/(config.refclk_divisions()*config.refclk_freq);
+	for (std::size_t i = 0; i < 4; i++){
+		Meas meas;
+		meas.status = Meas::Valid;
+		meas.lsb_ps = lsb_ps;
+		meas.refclk_freq = config.refclk_freq;
+
+		meas.ref_index = 0U;
+		meas.stop_result = 0U;
+
+		meas.ref_index |= (static_cast<uint32_t>(readout[i*6U]) << 16U);
+		meas.ref_index |= (static_cast<uint32_t>(readout[i*6U+1U]) << 8U);
+		meas.ref_index |= static_cast<uint32_t>(readout[i*6U+2U]);
+
+		meas.stop_result |= (static_cast<uint32_t>(readout[i*6U+3U]) << 16U);
+		meas.stop_result |= (static_cast<uint32_t>(readout[i*6U+4U]) << 8U);
+		meas.stop_result |= static_cast<uint32_t>(readout[i*6U+5U]);
+
+		measurements.push_back(meas);
+	}
 }

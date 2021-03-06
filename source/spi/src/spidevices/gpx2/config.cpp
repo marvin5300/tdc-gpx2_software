@@ -155,3 +155,11 @@ auto Config::str() const->std::string {
 	data += static_cast<char>(byte);
 	return data;
 }
+
+uint32_t Config::refclk_divisions(){
+	uint32_t dat{};
+	dat |= (static_cast<uint32_t>(REFCLK_DIVISIONS_UPPER) << 16U);
+	dat |= (static_cast<uint32_t>(REFCLK_DIVISIONS_MIDDLE) << 8U);
+	dat |= static_cast<uint32_t>(REFCLK_DIVISIONS_LOWER);
+	return dat;
+}
