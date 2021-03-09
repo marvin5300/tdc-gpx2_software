@@ -1,6 +1,7 @@
 #ifndef GPIO_H
 #define GPIO_H
 #include <vector>
+#include <mutex>
 #include <shared_mutex>
 #include <chrono>
 #include <future>
@@ -74,8 +75,8 @@ public:
     };
 
     gpio(std::string _consumer = "gpio", std::string _chipname = "gpiochip0") 
-    : consumer{_consumer}
-    , chipname{_chipname}
+    : consumer{std::move(_consumer)}
+    , chipname{std::move(_chipname)}
     {};
     virtual ~gpio();
 
