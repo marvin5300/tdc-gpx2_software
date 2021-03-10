@@ -46,9 +46,13 @@ void Config::loadDefaultConfig() {
 	PIN_ENA_STOP1 = 1;
 
 	// reg_addr 1
+	//constexpr std::uint8_t high_resolution_mode_0 = 0;
 	constexpr std::uint8_t high_resolution_mode_2 = 2;
+	//constexpr std::uint8_t channel_combine_none = 0;
+	//constexpr std::uint8_t channel_combine_pulsewidth = 2;
+	constexpr std::uint8_t channel_combine_pulsedistance = 1;
 	HIGH_RESOLUTION = high_resolution_mode_2;
-	CHANNEL_COMBINE = 0;
+	CHANNEL_COMBINE = channel_combine_pulsedistance;
 	HIT_ENA_STOP4 = 1;
 	HIT_ENA_STOP3 = 1;
 	HIT_ENA_STOP2 = 1;

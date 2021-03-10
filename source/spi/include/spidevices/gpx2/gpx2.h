@@ -56,7 +56,7 @@ namespace SPI {
 		public:
 			using spiDevice::spiDevice;
 
-			void init(std::string busAddress = "/dev/spidev0.0", std::uint32_t speed = 61035, Mode mode = SPI::Mode::spi_mode_2, std::uint8_t bits = 8);
+			void init(std::string busAddress = "/dev/spidev0.0", std::uint32_t speed = 61035, Mode mode = SPI::Mode::spi_mode_1, std::uint8_t bits = 8);
 			void power_on_reset();
 			void init_reset();
 			auto write_config()->bool;
