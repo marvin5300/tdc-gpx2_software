@@ -101,6 +101,6 @@ auto GPX2::read_results()->std::vector<Meas> {
 		//<< " refclk_freq=" <<meas.refclk_freq << " lsb_ps=" << meas.lsb_ps << std::endl;
 		measurements.push_back(meas);
 	}
-	std::cout << std::endl;
+	//std::cout << std::endl;
 	return measurements;
 }

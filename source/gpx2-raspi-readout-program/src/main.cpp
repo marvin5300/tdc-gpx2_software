@@ -114,7 +114,7 @@ auto main()->int {
 			}
 
 			for (auto val : diffs) {
-				std::cout << fabs(val) << std::endl;
+				std::cout << val << std::endl;
 			}
 		}
 	}
