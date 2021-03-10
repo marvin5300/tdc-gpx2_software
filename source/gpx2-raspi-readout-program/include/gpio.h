@@ -118,8 +118,6 @@ private:
     std::atomic<bool> m_run{ true };
 
     std::vector<setting> m_settings{};
-
-    std::mutex m_gpio_mutex{};
 };
 
 #endif // GPIO_H

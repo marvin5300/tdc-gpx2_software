@@ -27,7 +27,6 @@ void gpio::start()
 			if (result != 0) {
 				break;
 			}
-			std::this_thread::sleep_for(m_timeout);
 		}
 
 		return result + shutdown();
@@ -170,7 +169,6 @@ auto gpio::setup() -> int {
 
 auto gpio::step() -> int
 {
-	std::scoped_lock<std::mutex> lock{ m_gpio_mutex };
 	gpiod_line_bulk* fired = new gpiod_line_bulk{};
 	gpiod_line_bulk_init(fired);
 	int status = gpiod_line_event_wait_bulk(lines, &c_wait_timeout, fired);
@@ -231,7 +229,6 @@ auto gpio::write(const event& e) -> bool
 	if (!m_result.valid()) {
 		return false;
 	}
-	std::scoped_lock<std::mutex> lock{ m_gpio_mutex };
 	std::cout << "requested write pin " << e.pin << " to " << e.type;
 	//gpiod_line* line = 
 	//gpiod_line_set_value(line, 1);

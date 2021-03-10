@@ -86,4 +86,5 @@ auto GPX2::read_results()->std::vector<Meas> {
 
 		measurements.push_back(meas);
 	}
+	return measurements;
 }
