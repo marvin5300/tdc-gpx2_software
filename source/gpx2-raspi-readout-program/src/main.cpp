@@ -89,11 +89,18 @@ auto main()->int {
 					continue;
 				}
 			}
-			double max_interval = 10e-9;
+			double max_interval = 10e-8;
 			for (int i = 0; i < 4; i++) {
 				for (int j = 0; j < 4; j++) {
 					double some_readout = 0;
-					some_readout = diff(readout[i][j], readout[i][(j + 1) % 4]); // combinations are possible for 1+2, 2+3, 3+4, 1+4
+					SPI::GPX2_TDC::Meas val0, val1;
+					val0 = readout[i][j];
+					val1 = readout[i][(j + 1) % 4];
+					if (val0.status == SPI::GPX2_TDC::Meas::Invalid || val1.status == SPI::GPX2_TDC::Meas::Invalid) {
+						continue;
+					}
+
+					some_readout = diff(val0, val1); // combinations are possible for 1+2, 2+3, 3+4, 1+4
 					if (fabs(some_readout) < max_interval) {
 						diffs.push_back(some_readout);
 					}
@@ -102,7 +109,14 @@ auto main()->int {
 			for (int i = 0; i < 3; i++) {
 				for (int j = 0; j < 4; j++) {
 					double some_readout = 0;
-					some_readout = diff(readout[i][j], readout[i + 1][(j + 1) % 4]); // combinations are possible for 1+2, 2+3, 3+4, 1+4
+					SPI::GPX2_TDC::Meas val0, val1;
+					val0 = readout[i][j];
+					val1 = readout[i + 1][(j + 1) % 4];
+					if (val0.status == SPI::GPX2_TDC::Meas::Invalid || val1.status == SPI::GPX2_TDC::Meas::Invalid) {
+						continue;
+					}
+
+					some_readout = diff(val0, val1); // combinations are possible for 1+2, 2+3, 3+4, 1+4
 					if (fabs(some_readout) < max_interval) {
 						diffs.push_back(some_readout);
 					}

@@ -97,6 +97,9 @@ auto GPX2::read_results()->std::vector<Meas> {
 		meas.stop_result |= (static_cast<uint32_t>(readout[i * 6U + 4U]) << 8U);
 		meas.stop_result |= static_cast<uint32_t>(readout[i * 6U + 5U]);
 
+		if (meas.ref_index == 0xffffffU && meas.stop_result == 0xffffffU) {
+			meas.status = Meas::Invalid;
+		}
 		//std::cout << std::setw(2) << std::setfill('0') << std::dec << "meas_stop_" << i << ": ref_index=" << meas.ref_index << " stop_result=" << meas.stop_result << std::endl; 
 		//<< " refclk_freq=" <<meas.refclk_freq << " lsb_ps=" << meas.lsb_ps << std::endl;
 		measurements.push_back(meas);
