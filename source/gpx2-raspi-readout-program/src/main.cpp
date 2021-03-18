@@ -100,7 +100,13 @@ auto main()->int {
 						continue;
 					}
 
-					some_readout = diff(val0, val1); // combinations are possible for 1+2, 2+3, 3+4, 1+4
+					some_readout = diff(val0, val1); // combinations are possible for 1+2, 2+3, 3+4, 1
+
+					//std::cout << "first loop: i=" << i << " j="<< j << "  " << some_readout << std::endl;
+
+					if (j % 2 == 1) {
+						some_readout = -some_readout;
+					}
 					if (fabs(some_readout) < max_interval) {
 						diffs.push_back(some_readout);
 					}
@@ -117,16 +123,31 @@ auto main()->int {
 					}
 
 					some_readout = diff(val0, val1); // combinations are possible for 1+2, 2+3, 3+4, 1+4
+					//std::cout << "second loop: i=" << i << "j=" << j << "  " << some_readout << std::endl;
+
+					if (j % 2 == 1) {
+						some_readout = -some_readout;
+					}
 					if (fabs(some_readout) < max_interval) {
 						diffs.push_back(some_readout);
 					}
+
+					val0 = readout[i+1][j];
+					val1 = readout[i][(j + 1) % 4];
 					some_readout = diff(readout[i + 1][j], readout[i][(j + 1) % 4]); // combinations are possible for 1+2, 2+3, 3+4, 1+4
+
+					//std::cout << "second loop: i=" << i << "j=" << j << "  " << some_readout << std::endl;
+
+					if (j % 2 == 1) {
+						some_readout = -some_readout;
+					}
+
 					if (fabs(some_readout) < max_interval) {
 						diffs.push_back(some_readout);
 					}
 				}
 			}
-
+			//std::cout << std::endl;
 			for (auto val : diffs) {
 				std::cout << val << std::endl;
 			}
