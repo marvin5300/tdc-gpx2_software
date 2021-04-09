@@ -5,8 +5,11 @@
 #include <iomanip>
 #include <cmath>
 
-constexpr double pico_second = 1e-12;
-static double diff(const SPI::GPX2_TDC::Meas& first, const SPI::GPX2_TDC::Meas& second) {
+constexpr double pico_second = 1e-12; // value for one pico second in seconds
+constexpr double max_interval = 10e-8; // maximum interval between two stop bits to count as hit
+constexpr unsigned wait_timeout = 1000000; // if no signal from detector for wait_timeout amount of time before restarting the waiting...
+constexpr unsigned interrupt_pin = 20; // interrupt pin for the falling edge signal coming from GPX2 chip
+static auto diff(const SPI::GPX2_TDC::Meas& first, const SPI::GPX2_TDC::Meas& second) -> double{
 	if (first.status == SPI::GPX2_TDC::Meas::Invalid || second.status == SPI::GPX2_TDC::Meas::Invalid || first.refclk_freq != second.refclk_freq || first.refclk_freq == 0.) {
 		return 0;// std::cout << "measurement not valid" << std::endl;
 	}
@@ -58,7 +61,7 @@ auto main()->int {
 
 	gpio handler{};
 	gpio::setting pin_setting{};
-	pin_setting.gpio_pins = std::vector<unsigned int>{ 20 };
+	pin_setting.gpio_pins = std::vector<unsigned int>{ interrupt_pin };
 
 	auto callback = handler.list_callback(pin_setting);
 
@@ -66,7 +69,7 @@ auto main()->int {
 
 	gpx2.init_reset();
 	while (true) {
-		auto event = callback->wait(std::chrono::milliseconds {1000000});
+		auto event = callback->wait(std::chrono::milliseconds {wait_timeout});
 		if (!event) {
 			if (verbosity > 1) {
 				std::cout << "event was neither rising nor falling. This should not happen. Stopping." << std::endl;
@@ -89,11 +92,11 @@ auto main()->int {
 					continue;
 				}
 			}
-			double max_interval = 10e-8;
 			for (int i = 0; i < 4; i++) {
 				for (int j = 0; j < 4; j++) {
 					double some_readout = 0;
-					SPI::GPX2_TDC::Meas val0, val1;
+					SPI::GPX2_TDC::Meas val0;
+					SPI::GPX2_TDC::Meas val1;
 					val0 = readout[i][j];
 					val1 = readout[i][(j + 1) % 4];
 					if (val0.status == SPI::GPX2_TDC::Meas::Invalid || val1.status == SPI::GPX2_TDC::Meas::Invalid) {
@@ -115,7 +118,8 @@ auto main()->int {
 			for (int i = 0; i < 3; i++) {
 				for (int j = 0; j < 4; j++) {
 					double some_readout = 0;
-					SPI::GPX2_TDC::Meas val0, val1;
+					SPI::GPX2_TDC::Meas val0;
+					SPI::GPX2_TDC::Meas val1;
 					val0 = readout[i][j];
 					val1 = readout[i + 1][(j + 1) % 4];
 					if (val0.status == SPI::GPX2_TDC::Meas::Invalid || val1.status == SPI::GPX2_TDC::Meas::Invalid) {

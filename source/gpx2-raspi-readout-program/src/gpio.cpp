@@ -8,7 +8,7 @@
 #include <iostream>
 #include <condition_variable>
 #include <gpiod.h>
-#include <time.h>
+#include <ctime>
 
 void gpio::start()
 {
@@ -169,15 +169,13 @@ auto gpio::setup() -> int {
 
 auto gpio::step() -> int
 {
-	gpiod_line_bulk* fired = new gpiod_line_bulk{};
+	auto* fired = new gpiod_line_bulk{};
 	gpiod_line_bulk_init(fired);
 	int status = gpiod_line_event_wait_bulk(lines, &c_wait_timeout, fired);
 	if (status <= 0){
 		//  0 -> timeout
 		// -1 -> error
-		if (fired!=nullptr){
-			delete fired;
-		}
+		delete fired;
 		//std::cout << "leaving step, " << status << std::endl;
 		return status;
 	}
@@ -186,9 +184,7 @@ auto gpio::step() -> int
 		gpiod_line_event gpio_e{};
 		status = gpiod_line_event_read(line, &gpio_e);
 		if (status!=0){
-			if (fired!=nullptr){
-				delete fired;
-			}
+			delete fired;
 			std::cout << "leaving step, line event read error" << std::endl;
 			return status;
 		}
@@ -202,9 +198,7 @@ auto gpio::step() -> int
 		}
 		notify_all(e);
 	}
-	if (fired!=nullptr){
-		delete fired;
-	}
+	delete fired;
 	return 0;
 }
 
