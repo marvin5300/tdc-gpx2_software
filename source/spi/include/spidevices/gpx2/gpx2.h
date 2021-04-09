@@ -41,6 +41,20 @@ namespace SPI {
 			}
 			//friend double operator-(const Meas& first, const Meas& second);
 		};
+
+		constexpr double pico_second { 1e-12 }; // value for one pico second in seconds
+		inline static auto diff(const SPI::GPX2_TDC::Meas& first, const SPI::GPX2_TDC::Meas& second) -> double{
+			if (first.status == SPI::GPX2_TDC::Meas::Invalid || second.status == SPI::GPX2_TDC::Meas::Invalid || first.refclk_freq != second.refclk_freq || first.refclk_freq == 0.) {
+				return 0;// std::cout << "measurement not valid" << std::endl;
+			}
+			double refclk_period = 1 / first.refclk_freq;
+			double stop_first = first.lsb_ps * first.stop_result;
+			double stop_second = second.lsb_ps * second.stop_result;
+			double result{};
+			result = refclk_period * static_cast<double>(second.ref_index - first.ref_index);
+			result += (stop_second - stop_first) * pico_second;
+			return result;
+		}
 		/*inline double operator-(const Meas& first, const Meas& second){
 			if (!first || !second || first.refclk_freq != second.refclk_freq || first.refclk_freq==0.){
 				std::cout << "measurement not valid" << std::endl;
