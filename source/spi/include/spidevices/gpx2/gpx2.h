@@ -6,6 +6,8 @@
 #include <stdint.h>
 #include <limits>
 #include <string>
+#include <vector>
+#include <queue>
 
 
 namespace SPI {
@@ -68,6 +70,7 @@ namespace SPI {
 			[[nodiscard]] auto write_config(const std::string& data)->bool;
 			[[nodiscard]] auto write_config(const std::uint8_t reg_addr, const std::uint8_t data)->bool;
 			[[nodiscard]] auto read_config(const std::uint8_t reg_addr)->std::uint8_t;
+			std::queue<Meas> readout_buffer;
 			Config config;
 		};
 	}
