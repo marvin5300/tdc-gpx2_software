@@ -59,14 +59,15 @@ namespace SPI {
 			void init(std::string busAddress = "/dev/spidev0.0", std::uint32_t speed = 61035, Mode mode = SPI::Mode::spi_mode_1, std::uint8_t bits = 8);
 			void power_on_reset();
 			void init_reset();
-			auto write_config()->bool;
-			auto write_config(const Config& data)->bool;
-			auto read_config()->std::string;
-			auto read_results()->std::vector<Meas>;
+			[[nodiscard]] auto write_config()->bool;
+			[[nodiscard]] auto write_config(const Config& data)->bool;
+			[[nodiscard]] auto read_config()->std::string;
+			[[nodiscard]] auto get_filtered_intervals(double max_interval)->std::vector<double>;
+			[[nodiscard]] auto read_results()->std::vector<Meas>;
 		private:
-			auto write_config(const std::string& data)->bool;
-			auto write_config(const std::uint8_t reg_addr, const std::uint8_t data)->bool;
-			auto read_config(const std::uint8_t reg_addr)->std::uint8_t;
+			[[nodiscard]] auto write_config(const std::string& data)->bool;
+			[[nodiscard]] auto write_config(const std::uint8_t reg_addr, const std::uint8_t data)->bool;
+			[[nodiscard]] auto read_config(const std::uint8_t reg_addr)->std::uint8_t;
 			Config config;
 		};
 	}
