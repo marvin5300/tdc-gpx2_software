@@ -127,7 +127,7 @@ auto Readout::shutdown() -> int
 auto Readout::read_tdc()->int {
 	// checks if data is available on the gpx2 (by checking if interrupt pin is low)
 	// then reads out data from the gpx2-tdc and puts it in the queue
-	while (callback->read(m_interrupt_pin) > 0) {
+	while (callback->read(m_interrupt_pin) != 0) {
 		// while interrupt pin is high, do not readout (since there is no data available)
 		std::this_thread::sleep_for(readout_loop_timeout);
 	}
@@ -196,17 +196,17 @@ void Readout::process_queue() {
 	// Compares a few values from the queues, removes not matching timestamps and prints matching ones
 	auto front_opt_0{ stop0.front() };
 	auto front_opt_1{ stop1.front() };
-	if (!front_opt_0.has_value() || !front_opt_0.has_value()) {
+	if (!front_opt_0.has_value() || !front_opt_1.has_value()) {
 		return;
 	}
 	auto interval = SPI::GPX2_TDC::diff(front_opt_0.value(), front_opt_1.value());
 	while (!std::isnormal(interval)) {
-		std::cerr << "interval is nan" << std::endl;
+		//std::cerr << "interval is nan, values: " << front_opt_0.value().ref_index << " " << front_opt_1.value().ref_index << std::endl;
 		stop0.pop();
 		stop1.pop();
 		front_opt_0 = stop0.front();
 		front_opt_1 = stop1.front();
-		if (!front_opt_0.has_value() || !front_opt_0.has_value()) {
+		if (!front_opt_0.has_value() || !front_opt_1.has_value()) {
 			return;
 		}
 		interval = SPI::GPX2_TDC::diff(front_opt_0.value(), front_opt_1.value());

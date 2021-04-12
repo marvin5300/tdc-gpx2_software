@@ -23,9 +23,14 @@ void gpio::start()
 			return result;
 		}
 		while (m_run) {
-			result = step();
-			if (result != 0) {
-				break;
+			if (lines != nullptr) {
+				result = step();
+				if (result != 0) {
+					break;
+				}
+			}
+			else {
+				std::this_thread::sleep_for(std::chrono::milliseconds(100));
 			}
 		}
 
@@ -243,6 +248,9 @@ auto gpio::write(const gpio::event& e) -> bool
 
 auto gpio::read(unsigned pin_num) -> int
 {
+	if (chip==nullptr) {
+		return -1;
+	}
 	if (std::find(pins_used_by_listeners.begin(), pins_used_by_listeners.end(), pin_num) != pins_used_by_listeners.end()) {
 		std::cerr << "Error: tried to read from pin that has already an active event listener." << std::endl;
 		m_run = false;
@@ -250,6 +258,7 @@ auto gpio::read(unsigned pin_num) -> int
 	}
 	gpiod_line* line = nullptr;
 	if (other_lines.count(pin_num)==0) {
+		std::cout << other_lines.count(pin_num) << std::endl;;
 		line = gpiod_chip_get_line(chip, pin_num);
 		if (!line) {
 			std::cerr << "Chip get lines failed for line " << pin_num << std::endl;
