@@ -48,7 +48,7 @@ public:
     struct setting
     {
         [[nodiscard]] auto matches(const event& e) const -> bool;
-        std::vector<unsigned int> gpio_pins;
+        std::vector<unsigned> gpio_pins;
     };
 
     class callback
@@ -60,6 +60,7 @@ public:
 
         [[nodiscard]] auto write_async(const event& e)->std::future<bool>;
         [[nodiscard]] auto write(const event& e) -> bool;
+        [[nodiscard]] auto read(unsigned pin_num) -> int;
 
         callback(setting s, gpio& handler);
 
@@ -74,9 +75,9 @@ public:
         gpio& m_handler;
     };
 
-    gpio(std::string _consumer = "gpio", std::string _chipname = "gpiochip0") 
-    : consumer{std::move(_consumer)}
-    , chipname{std::move(_chipname)}
+    gpio(std::string consumer = "gpio", std::string chipname = "gpiochip0")
+    : m_consumer{std::move(consumer)}
+    , m_chipname{std::move(chipname)}
     {};
     virtual ~gpio();
 
@@ -94,11 +95,12 @@ private:
     [[nodiscard]] auto step() -> int;
     [[nodiscard]] auto shutdown() -> int;
     [[nodiscard]] auto write(const event& e) -> bool;
+    [[nodiscard]] auto read(unsigned pin_num) -> int;
 
     void notify_all(event e);
 
-    std::string consumer;
-    std::string chipname;
+    std::string m_consumer;
+    std::string m_chipname;
 
     const timespec c_wait_timeout{1,0};
 
@@ -106,6 +108,9 @@ private:
     //std::shared_ptr<::gpiod_line_bulk> lines{nullptr};
     gpiod_chip* chip{nullptr};
     gpiod_line_bulk* lines{nullptr};
+
+    std::map< unsigned, gpiod_line* > other_lines{}; // map of other initialized lines which are requested but have no active event listening going on
+    std::vector<unsigned> pins_used_by_listeners{};
 
     //inline static std::size_t global_id_counter{ 0 };
     std::size_t global_id_counter{ 0 };

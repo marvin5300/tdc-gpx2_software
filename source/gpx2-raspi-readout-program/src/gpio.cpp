@@ -126,6 +126,10 @@ auto gpio::callback::write(const event& e) -> bool
 	return m_handler.write(e);
 }
 
+auto gpio::callback::read(unsigned pin_num) -> int {
+	return m_handler.read(pin_num);
+}
+
 void gpio::callback::notify(const event& e)
 {
 	if (!m_setting.matches(e))
@@ -138,28 +142,27 @@ void gpio::callback::notify(const event& e)
 }
 
 auto gpio::setup() -> int {
-	chip = gpiod_chip_open_by_name(chipname.c_str());
+	chip = gpiod_chip_open_by_name(m_chipname.c_str());
 	if (chip==nullptr) {
 		std::cerr << "Open gpio chip failed" << std::endl;
 		return -1;
 	}
-	std::vector<unsigned int> all_pins;
 	for (auto s : m_settings) {
 		for (auto pin : s.gpio_pins) {
-			all_pins.push_back(pin);
+			pins_used_by_listeners.push_back(pin);
 		}
 	}
-	std::sort(all_pins.begin(), all_pins.end());
-	all_pins.erase(std::unique(all_pins.begin(), all_pins.end()), all_pins.end());
+	std::sort(pins_used_by_listeners.begin(), pins_used_by_listeners.end());
+	pins_used_by_listeners.erase(std::unique(pins_used_by_listeners.begin(), pins_used_by_listeners.end()), pins_used_by_listeners.end());
 
 	lines = new gpiod_line_bulk{};
 	gpiod_line_bulk_init(lines);
-	int status = gpiod_chip_get_lines(chip, all_pins.data(), all_pins.size(),lines);
+	int status = gpiod_chip_get_lines(chip, pins_used_by_listeners.data(), pins_used_by_listeners.size(),lines);
 	if (status<0){
 		std::cerr << "Chip get lines failed" << std::endl;
 		return status;
 	}
-	status = gpiod_line_request_bulk_both_edges_events(lines, consumer.c_str());
+	status = gpiod_line_request_bulk_both_edges_events(lines, m_consumer.c_str());
 	if (status<0){
 		std::cerr << "Line request bulk both edges failed" << std::endl;
 		return status;
@@ -205,10 +208,14 @@ auto gpio::step() -> int
 auto gpio::shutdown() -> int
 {
 	if (lines != nullptr){
-		gpiod_line_request_bulk_input(lines, consumer.c_str());
+		gpiod_line_request_bulk_input(lines, m_consumer.c_str());
 		gpiod_line_release_bulk(lines);
 		//delete lines;
 		lines = nullptr;
+	}
+	for (auto it = other_lines.begin(); it != other_lines.end(); it++) {
+		gpiod_line_release(it->second);
+		other_lines.erase(it);
 	}
 	if (chip != nullptr){
 		gpiod_chip_close(chip);
@@ -218,15 +225,51 @@ auto gpio::shutdown() -> int
 	return 0;
 }
 
-auto gpio::write(const event& e) -> bool
+auto gpio::write(const gpio::event& e) -> bool
 {
 	if (!m_result.valid()) {
 		return false;
 	}
 	std::cout << "requested write pin " << e.pin << " to " << e.type;
-	//gpiod_line* line = 
+	//gpiod_line* line =
 	//gpiod_line_set_value(line, 1);
 	//gpiod_line_request_output();
 
 	return true;
+}
+
+auto gpio::read(unsigned pin_num) -> int
+{
+	if (std::find(pins_used_by_listeners.begin(), pins_used_by_listeners.end(), pin_num) != pins_used_by_listeners.end()) {
+		std::cerr << "Error: tried to read from pin that has already an active event listener." << std::endl;
+		m_run = false;
+		return -1;
+	}
+	gpiod_line* line = nullptr;
+	if (other_lines.count(pin_num)==0) {
+		line = gpiod_chip_get_line(chip, pin_num);
+		if (!line) {
+			std::cerr << "Chip get lines failed for line " << pin_num << std::endl;
+			return -1;
+		}
+
+		int ret = gpiod_line_request_input(line, m_consumer.c_str());
+		if (ret < 0) {
+			std::cerr << "Request line as input failed" << std::endl;
+			gpiod_line_release(line);
+			return -1;
+		}
+		other_lines[pin_num] = line;
+	}
+	else {
+		line = other_lines.at(pin_num);
+	}
+	int val = gpiod_line_get_value(line);
+	if (val < 0) {
+		std::cerr << "Read line input failed" << std::endl;
+		other_lines.erase(pin_num);
+		gpiod_line_release(line);
+		return -1;
+	}
+	return val;
 }

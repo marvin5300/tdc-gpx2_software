@@ -39,22 +39,27 @@ configure_file(
 
 set(READOUT_HEADER_FILES
     "${PROJECT_HEADER_DIR}/gpio.h"
+    "${PROJECT_HEADER_DIR}/queue.h"
+    "${PROJECT_HEADER_DIR}/readout.h"
 )
 set(READOUT_SOURCE_FILES
     "${PROJECT_SRC_DIR}/main.cpp"
     "${PROJECT_SRC_DIR}/gpio.cpp"
+    "${PROJECT_SRC_DIR}/readout.cpp"
 )
 
 add_executable(readout ${READOUT_SOURCE_FILES} ${READOUT_HEADER_FILES})
 
 target_include_directories(readout PUBLIC
     ${PROJECT_HEADER_DIR}
-    "${CMAKE_CURRENT_SOURCE_DIR}/../spi/include/"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../spi/include/spidevices/gpx2/"
 )
 
 target_link_directories(readout PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/../lib/")
 
+if (!WIN32)
 find_library(LIBGPIOD libgpiod REQUIRED)
+endif()
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
