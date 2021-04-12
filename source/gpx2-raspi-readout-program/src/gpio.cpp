@@ -155,6 +155,9 @@ auto gpio::setup() -> int {
 	std::sort(pins_used_by_listeners.begin(), pins_used_by_listeners.end());
 	pins_used_by_listeners.erase(std::unique(pins_used_by_listeners.begin(), pins_used_by_listeners.end()), pins_used_by_listeners.end());
 
+	if (pins_used_by_listeners.empty()) {
+		return 0;
+	}
 	lines = new gpiod_line_bulk{};
 	gpiod_line_bulk_init(lines);
 	int status = gpiod_chip_get_lines(chip, pins_used_by_listeners.data(), pins_used_by_listeners.size(),lines);
@@ -245,7 +248,7 @@ auto gpio::read(unsigned pin_num) -> int
 		m_run = false;
 		return -1;
 	}
-	gpiod_line* line = nullptr;
+	gpiod_line* line = new gpiod_line{};
 	if (other_lines.count(pin_num)==0) {
 		line = gpiod_chip_get_line(chip, pin_num);
 		if (!line) {
