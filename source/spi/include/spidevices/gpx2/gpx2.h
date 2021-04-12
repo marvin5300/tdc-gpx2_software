@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include <queue>
+#include <cmath>
 
 
 namespace SPI {
@@ -43,9 +44,13 @@ namespace SPI {
 		};
 
 		constexpr double pico_second { 1e-12 }; // value for one pico second in seconds
+		constexpr double max_plausible_interval { };
 		inline static auto diff(const SPI::GPX2_TDC::Meas& first, const SPI::GPX2_TDC::Meas& second) -> double{
 			if (first.status == SPI::GPX2_TDC::Meas::Invalid || second.status == SPI::GPX2_TDC::Meas::Invalid || first.refclk_freq != second.refclk_freq || first.refclk_freq == 0.) {
-				return 0;// std::cout << "measurement not valid" << std::endl;
+				return std::nan("invalid");// std::cout << "measurement not valid" << std::endl;
+			}
+			if (second.ref_index - first.ref_index > 1000){
+				return std::nan("overflow");
 			}
 			double refclk_period = 1 / first.refclk_freq;
 			double stop_first = first.lsb_ps * first.stop_result;

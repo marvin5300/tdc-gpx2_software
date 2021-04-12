@@ -40,21 +40,47 @@ void process_queue(std::queue<SPI::GPX2_TDC::Meas>& stop0, std::queue<SPI::GPX2_
 	*/
 
 	// checks interval between ordered stop0 and stop1 channels.
-	if (stop0.size() > 100000 || stop1.size() > 100000){
-		std::cerr << "stop0 size: " << stop0.size() << " stop1 size: " <<  stop1.size() << std::endl;
+	if (stop0.size()==0 || stop1.size()==0){
+		return;
+	}
+	auto interval = SPI::GPX2_TDC::diff(stop0.front(),stop1.front());
+	while(!std::isnormal(interval)){
+		std::cerr << "interval is nan" << std::endl;
+		stop0.pop();
+		stop1.pop();
+		if (stop0.size()==0 || stop1.size()==0){
+			return;
+		}
+		interval = SPI::GPX2_TDC::diff(stop0.front(),stop1.front());
 	}
 	while (stop0.size() > 0 && stop1.size() > 0){
-		auto interval = SPI::GPX2_TDC::diff(stop0.front(),stop1.front());
+		if (stop0.size() > 1000 || stop1.size() > 1000){
+			std::cerr << "stop0 size: " << stop0.size() << " stop1 size: " <<  stop1.size() << " interval: " << interval;
+			std::cerr << " stop0.front().ref_index " << stop0.front().ref_index;
+			std::cerr << " stop1.front().ref_index " << stop1.front().ref_index;
+			std::cerr <<  std::endl;
+		}
 		while(interval > max_interval && stop0.size() > 0){
 			stop0.pop();
+			if (stop0.size()==0){
+				return;
+			}
 			interval = SPI::GPX2_TDC::diff(stop0.front(),stop1.front());
 		}
 		while(interval < -max_interval && stop0.size() > 0){
 			stop1.pop();
+			if (stop1.size()==0){
+				return;
+			}
 			interval = SPI::GPX2_TDC::diff(stop0.front(),stop1.front());
 		}
 		if (fabs(interval) < max_interval){
-			std::cout << interval << std::endl;
+			std::cout << interval;
+			std::cout << " " << stop0.front().ref_index << " " << stop0.front().stop_result;
+			std::cout << " " << stop1.front().ref_index << " " << stop1.front().stop_result;
+			std::cout << std::endl;
+			stop0.pop();
+			stop1.pop();
 		}
 	}
 }
