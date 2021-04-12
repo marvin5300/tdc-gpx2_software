@@ -248,7 +248,7 @@ auto gpio::read(unsigned pin_num) -> int
 		m_run = false;
 		return -1;
 	}
-	gpiod_line* line = new gpiod_line{};
+	gpiod_line* line = nullptr;
 	if (other_lines.count(pin_num)==0) {
 		line = gpiod_chip_get_line(chip, pin_num);
 		if (!line) {
