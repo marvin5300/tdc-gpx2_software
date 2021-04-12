@@ -2,6 +2,7 @@
 #define READOUT_H
 
 #include "gpx2.h"
+#include "gpio.h"
 #include "queue.h"
 #include <future>
 #include <iostream>
@@ -37,7 +38,10 @@ private:
 
 	void process_queue();
 
+	std::unique_ptr<gpio> handler;
+	std::shared_ptr<gpio::callback> callback;
 	const std::chrono::milliseconds process_loop_timeout = std::chrono::milliseconds(5);
+	const std::chrono::milliseconds readout_loop_timeout = std::chrono::milliseconds(1);
 	double m_max_interval{};
 	unsigned m_interrupt_pin{};
 	std::future<int> m_result{};

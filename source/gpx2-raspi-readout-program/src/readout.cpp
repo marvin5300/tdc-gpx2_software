@@ -102,6 +102,14 @@ auto Readout::setup()->int {
 		std::cerr << "failed to write config!" << std::endl;
 		return -1;
 	}
+
+	handler = std::make_unique<gpio>();
+	gpio::setting pin_setting{};
+
+	callback = handler->list_callback(pin_setting);
+
+	handler->start();
+
 	gpx2->init_reset();
 	return 0;
 }
@@ -109,12 +117,20 @@ auto Readout::setup()->int {
 auto Readout::shutdown() -> int
 {
 	// put here all stuff that has to be done before closing
+	if (handler) {
+		handler->stop();
+		handler->join();
+	}
 	return 0;
 }
 
 auto Readout::read_tdc()->int {
 	// checks if data is available on the gpx2 (by checking if interrupt pin is low)
 	// then reads out data from the gpx2-tdc and puts it in the queue
+	while (callback->read(m_interrupt_pin) > 0) {
+		// while interrupt pin is high, do not readout (since there is no data available)
+		std::this_thread::sleep_for(readout_loop_timeout);
+	}
 	auto measurements = gpx2->read_results();
 
 	if (measurements.size() > 4) {
