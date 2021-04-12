@@ -142,11 +142,11 @@ auto Readout::read_tdc()->int {
 	size_t second{};
 
 	// do it for stop0 channel
-	first = 2;
-	second = 0;
+	first = 0;
+	second = 2;
 	if (SPI::GPX2_TDC::diff(measurements[0], measurements[2]) > 0) {
-		first = 0;
-		second = 2;
+		first = 2;
+		second = 0;
 	}
 	if (measurements[first].status == SPI::GPX2_TDC::Meas::Valid) {
 		auto back_opt = stop0.back();
@@ -162,11 +162,11 @@ auto Readout::read_tdc()->int {
 	}
 
 	// do it for stop1 channel
-	first = 3;
-	second = 1;
+	first = 1;
+	second = 3;
 	if (SPI::GPX2_TDC::diff(measurements[0], measurements[2]) > 0) {
-		first = 1;
-		second = 3;
+		first = 3;
+		second = 1;
 	}
 	if (measurements[first].status == SPI::GPX2_TDC::Meas::Valid) {
 		auto back_opt = stop1.back();
@@ -194,6 +194,23 @@ auto Readout::read_tdc()->int {
 void Readout::process_queue() {
 	// checks interval between ordered stop0 and stop1 channels.
 	// Compares a few values from the queues, removes not matching timestamps and prints matching ones
+	//if (stop0.size() > 200 || stop1.size() > 200) {
+	//	auto q0 = stop0.dump();
+	//	auto q1 = stop1.dump();
+	//	std::cout << "\nstop0:" << std::endl;
+	//	while(!q0.empty()){
+	//		std::cout << std::setw(8) << std::setfill('0') << q0.front().ref_index << "." << std::setw(6) << std::setfill('0') << q0.front().stop_result << std::endl;
+	//		q0.pop();
+	//	}
+	//	std::cout << "\nstop1:" << std::endl;
+	//	while (!q1.empty()) {
+	//		std::cout << std::setw(8) << std::setfill('0') << q1.front().ref_index << "." << std::setw(8) << std::setfill('0') << q1.front().stop_result << std::endl;
+	//		q1.pop();
+	//	}
+	//	std::cout << std::endl;
+	//	m_run = false;
+	//}
+	//return;
 	auto front_opt_0{ stop0.front() };
 	auto front_opt_1{ stop1.front() };
 	if (!front_opt_0.has_value() || !front_opt_1.has_value()) {

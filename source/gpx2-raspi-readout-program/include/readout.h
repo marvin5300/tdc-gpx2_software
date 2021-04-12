@@ -40,8 +40,8 @@ private:
 
 	std::unique_ptr<gpio> handler;
 	std::shared_ptr<gpio::callback> callback;
-	const std::chrono::milliseconds process_loop_timeout = std::chrono::milliseconds(5);
-	const std::chrono::milliseconds readout_loop_timeout = std::chrono::milliseconds(1);
+	const std::chrono::milliseconds process_loop_timeout = std::chrono::milliseconds(200);
+	const std::chrono::microseconds readout_loop_timeout = std::chrono::microseconds(1);
 	double m_max_interval{};
 	unsigned m_interrupt_pin{};
 	std::future<int> m_result{};

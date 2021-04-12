@@ -49,14 +49,16 @@ namespace SPI {
 			if (first.status == SPI::GPX2_TDC::Meas::Invalid || second.status == SPI::GPX2_TDC::Meas::Invalid || first.refclk_freq != second.refclk_freq || first.refclk_freq == 0.) {
 				return std::nan("invalid");// std::cout << "measurement not valid" << std::endl;
 			}
-			if (second.ref_index - first.ref_index > 1000){
+			int64_t ref0{ static_cast<int64_t>(first.ref_index) };
+			int64_t ref1{ static_cast<int64_t>(second.ref_index) };
+			if (std::abs(ref1-ref0) > 1){
 				return std::nan("overflow");
 			}
 			double refclk_period = 1 / first.refclk_freq;
 			double stop_first = first.lsb_ps * first.stop_result;
 			double stop_second = second.lsb_ps * second.stop_result;
 			double result{};
-			result = refclk_period * static_cast<double>(second.ref_index - first.ref_index);
+			result = refclk_period * static_cast<double>(ref1 - ref0);
 			result += (stop_second - stop_first) * pico_second;
 			return result;
 		}

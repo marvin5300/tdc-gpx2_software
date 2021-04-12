@@ -84,6 +84,11 @@ namespace thrdsf {
             std::scoped_lock<std::mutex> lock(m_mutex);
             m_queue.push(item);
         }
+
+        std::queue<T> dump() {
+            std::scoped_lock<std::mutex> lock(m_mutex);
+            return m_queue;
+        }
     };
 }
 
