@@ -36,11 +36,13 @@ namespace SPI {
 			uint32_t stop_result{};
 			double lsb_ps{1.};
 			double refclk_freq{std::numeric_limits<double>::quiet_NaN()};
-			inline operator bool()
-			{
-				return status != Invalid;
-			}
-			//friend double operator-(const Meas& first, const Meas& second);
+			operator bool();
+			auto operator < (const Meas& other) const -> bool;
+			auto operator > (const Meas& other) const -> bool;
+			auto operator == (const Meas& other) const -> bool;
+			auto operator != (const Meas& other) const -> bool;
+			auto operator <= (const Meas& other) const -> bool;
+			auto operator >= (const Meas& other) const -> bool;
 		};
 
 		constexpr double pico_second { 1e-12 }; // value for one pico second in seconds
@@ -49,14 +51,12 @@ namespace SPI {
 			if (first.status == SPI::GPX2_TDC::Meas::Invalid || second.status == SPI::GPX2_TDC::Meas::Invalid || first.refclk_freq != second.refclk_freq || first.refclk_freq == 0.) {
 				return std::nan("invalid");// std::cout << "measurement not valid" << std::endl;
 			}
-			int64_t ref0{ static_cast<int64_t>(first.ref_index) };
-			int64_t ref1{ static_cast<int64_t>(second.ref_index) };
-			if (std::abs(ref1-ref0) > 1){
-				return std::nan("overflow");
-			}
+			// int32_t is possible since maximum number of bits in register is 24
+			int32_t ref0{ static_cast<int32_t>(first.ref_index) };
+			int32_t ref1{ static_cast<int32_t>(second.ref_index) };
 			double refclk_period = 1 / first.refclk_freq;
-			double stop_first = first.lsb_ps * first.stop_result;
-			double stop_second = second.lsb_ps * second.stop_result;
+			double stop_first = first.lsb_ps * static_cast<double>(first.stop_result);
+			double stop_second = second.lsb_ps * static_cast<double>(second.stop_result);
 			double result{};
 			result = refclk_period * static_cast<double>(ref1 - ref0);
 			result += (stop_second - stop_first) * pico_second;

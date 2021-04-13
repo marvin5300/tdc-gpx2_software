@@ -18,7 +18,7 @@ namespace thrdsf {
 
     template<typename T>
     class Queue {
-        std::queue<T> m_queue;
+        std::deque<T> m_queue;
         mutable std::mutex m_mutex;
 
         // Moved out of public interface to prevent races between this
@@ -58,7 +58,7 @@ namespace thrdsf {
                 return {};
             }
             T tmp = m_queue.front();
-            m_queue.pop();
+            m_queue.pop_front();
             return tmp;
         }
 
@@ -82,12 +82,14 @@ namespace thrdsf {
 
         void push(const T& item) {
             std::scoped_lock<std::mutex> lock(m_mutex);
-            m_queue.push(item);
+            m_queue.push_back(item);
         }
 
-        std::queue<T> dump() {
+        std::deque<T> dump() {
             std::scoped_lock<std::mutex> lock(m_mutex);
-            return m_queue;
+            auto tmp = std::move(m_queue);
+            m_queue = std::deque<SPI::GPX2_TDC::Meas>{};
+            return tmp;
         }
     };
 }

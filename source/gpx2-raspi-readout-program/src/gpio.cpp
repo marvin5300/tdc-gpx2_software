@@ -238,7 +238,7 @@ auto gpio::write(const gpio::event& e) -> bool
 	if (!m_result.valid()) {
 		return false;
 	}
-	std::cout << "requested write pin " << e.pin << " to " << e.type;
+	//std::cout << "requested write pin " << e.pin << " to " << e.type;
 	//gpiod_line* line =
 	//gpiod_line_set_value(line, 1);
 	//gpiod_line_request_output();

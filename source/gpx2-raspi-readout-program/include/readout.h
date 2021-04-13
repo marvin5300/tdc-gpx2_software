@@ -40,15 +40,20 @@ private:
 
 	std::unique_ptr<gpio> handler;
 	std::shared_ptr<gpio::callback> callback;
-	const std::chrono::milliseconds process_loop_timeout = std::chrono::milliseconds(200);
+	const std::chrono::milliseconds process_loop_timeout = std::chrono::milliseconds(1000);
 	const std::chrono::microseconds readout_loop_timeout = std::chrono::microseconds(1);
 	double m_max_interval{};
 	unsigned m_interrupt_pin{};
+	size_t max_queue_size = 200;
 	std::future<int> m_result{};
 	std::future<int> process_result{};
 	std::unique_ptr<SPI::GPX2_TDC::GPX2> gpx2;
 	thrdsf::Queue<SPI::GPX2_TDC::Meas> stop0;
 	thrdsf::Queue<SPI::GPX2_TDC::Meas> stop1;
+	std::chrono::time_point<std::chrono::high_resolution_clock> start_time{};
+	std::chrono::time_point<std::chrono::high_resolution_clock> end_time{};
+	std::atomic<uint64_t> evt_count{};
+	std::atomic<uint64_t> invalid_count{};
 	std::atomic<bool> m_run{ true };
 };
 #endif // READOUT_H

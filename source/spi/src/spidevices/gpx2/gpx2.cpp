@@ -182,3 +182,45 @@ auto GPX2::get_filtered_intervals(double max_interval) -> std::vector<double>{
 	//std::cout << std::endl;
 	return diffs;
 }
+
+
+Meas::operator bool()
+{
+	return status != Invalid;
+}
+bool Meas::operator < (const Meas& other) const
+{
+	if (ref_index < other.ref_index) {
+		return true;
+	}
+	if (ref_index == other.ref_index) {
+		return stop_result < other.stop_result;
+	}
+	return false;
+}
+bool Meas::operator > (const Meas& other) const
+{
+	if (ref_index > other.ref_index) {
+		return true;
+	}
+	if (ref_index == other.ref_index) {
+		return stop_result > other.stop_result;
+	}
+	return false;
+}
+auto Meas::operator == (const Meas& other) const -> bool
+{
+	return (ref_index == other.ref_index && stop_result == other.stop_result);
+}
+auto Meas::operator != (const Meas& other) const -> bool
+{
+	return !(*this == other);
+}
+auto Meas::operator >= (const Meas& other) const -> bool
+{
+	return (*this == other) || (*this > other);
+}
+auto Meas::operator <= (const Meas& other) const  -> bool
+{
+	return (*this == other) || (*this < other);
+}
