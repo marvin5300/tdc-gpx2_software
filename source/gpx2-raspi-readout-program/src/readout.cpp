@@ -7,37 +7,35 @@
 #include <queue>
 #include <cmath>
 #include <omp.h>
+#include <csignal>
+
+std::unique_ptr<Readout> Readout::instance{};
 
 Readout::~Readout()
 {
 	if (m_result.valid()) {
 		stop();
 		m_result.wait();
+		process_result.wait();
 	}
 }
 
 void Readout::start(double max_ref_diff, unsigned interrupt_pin) {
-	m_max_interval = max_ref_diff;
-	m_interrupt_pin = interrupt_pin;
-
 	if (m_result.valid()) {
 		std::cerr << "readout already started\n";
 		return;
 	}
+
+	instance.reset(this);
+
+	m_max_interval = max_ref_diff;
+	m_interrupt_pin = interrupt_pin;
 
 	m_result = std::async(std::launch::async, [&] {
 		auto result{ setup() };
 		if (result != 0) {
 			return result;
 		}
-		start_time = std::chrono::high_resolution_clock::now();
-		process_result = std::async(std::launch::async, [&] {
-			while (m_run) {
-				std::this_thread::sleep_for(process_loop_timeout);
-				process_queue();
-			}
-			return 0;
-		});
 
 		while (m_run) {
 			result = read_tdc();
@@ -46,18 +44,28 @@ void Readout::start(double max_ref_diff, unsigned interrupt_pin) {
 			}
 		}
 
-		process_result.wait();
+
+		return result + shutdown();
+	});
+
+	process_result = std::async(std::launch::async, [&] {
+		start_time = std::chrono::high_resolution_clock::now();
+		while (m_run) {
+			std::this_thread::sleep_for(process_loop_timeout);
+			process_queue();
+		}
+		while (stop1.size() > 0 && stop0.size() > 0) {
+			process_queue(true);
+		}
 		end_time = std::chrono::high_resolution_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
 		std::cout << evt_count << " events, ";
 		std::cout << duration << " ms, ";
-		std::cout << "rate is " << static_cast<double>(evt_count) / static_cast<double>(duration) * 1e6 << "/s" << std::endl;;
-		std::cout << "non processed events in queues: " << stop0.size() << " " << stop1.size() << std::endl;
-		std::cout << "invalid events: " << invalid_count << std::endl;
-
-		return result + process_result.get() + shutdown();
+		auto rate = static_cast<double>(evt_count) / static_cast<double>(duration) * 1e6;
+		std::cout << "rate is " << rate << "/s, " << rate * 60 << "/min, " << rate * 60 * 24 << "/d, " << rate * 60 * 24 * 7 << "/w" << std::endl;
+		std::cout << "non processed events in queues: " << stop0.size() << " " << stop1.size() << " (should not be greate than " << max_queue_size << ")" << std::endl;
+		return 0;
 	});
-
 }
 
 void Readout::stop()
@@ -67,11 +75,13 @@ void Readout::stop()
 
 void Readout::join()
 {
-	if (!m_result.valid())
+	if (!m_result.valid()||!process_result.valid())
 	{
+		std::cerr << "m_result valid? " << m_result.valid() << " process_result valid? " << process_result.valid() << std::endl;
 		return;
 	}
 	m_result.wait();
+	process_result.wait();
 }
 
 auto Readout::setup()->int {
@@ -140,8 +150,6 @@ auto Readout::read_tdc()->int {
 	}
 	for (unsigned i = 0; i < 4; i++) {
 		auto measurements = gpx2->read_results();
-		auto back_opt_0 = stop0.back();
-		auto back_opt_1 = stop1.back();
 		for (unsigned j = 0; j < 4; j++) {
 			if (measurements[j]) {
 				if (j % 2 == 0) {
@@ -156,22 +164,11 @@ auto Readout::read_tdc()->int {
 	return 0;
 }
 
-void Readout::process_queue() {
+void Readout::process_queue(bool ignore_max_queue) {
 	// checks ref_diff between ordered stop0 and stop1 channels.
 	// Compares a few values from the queues, removes not matching timestamps and prints matching ones
 
-	/*
-	size_t size0{ stop0.size() };
-	size_t size1{ stop1.size() };
-	if (size0 > 1000 || size1 > 1000) {
-		std::cerr << "stop0 size: " << size0 << " stop1 size: " << size1 << " ref_diff: " << ref_diff;
-		std::cerr << " stop0.front().ref_index " << front_opt_0.value().ref_index;
-		std::cerr << " stop1.front().ref_index " << front_opt_1.value().ref_index;
-		std::cerr << std::endl;
-	}
-	*/
-
-	if (stop0.size() < max_queue_size && stop1.size() < max_queue_size) {
+	if (stop0.size() < max_queue_size && stop1.size() < max_queue_size && !ignore_max_queue) {
 		return;
 	}
 	auto q0 = stop0.dump();
@@ -195,7 +192,7 @@ void Readout::process_queue() {
 		while (ref_diff > 0) {
 			//std::cout << "ref_diff " << ref_diff << std::endl;
 			q0.pop_front();
-			evt_count += 1U;
+			//evt_count += 1U;
 			if (q0.empty()) {
 				return;
 			}
@@ -204,7 +201,7 @@ void Readout::process_queue() {
 		while (ref_diff < 0) {
 			//std::cout << "ref_diff " << ref_diff << std::endl;
 			q1.pop_front();
-			evt_count += 1U;
+			//evt_count += 1U;
 			if (q1.empty()) {
 				return;
 			}
