@@ -43,8 +43,6 @@ void Readout::start(double max_ref_diff, unsigned interrupt_pin) {
 				break;
 			}
 		}
-
-
 		return result + shutdown();
 	});
 
