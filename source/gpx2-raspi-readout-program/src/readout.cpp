@@ -60,7 +60,7 @@ void Readout::start(double max_ref_diff, unsigned interrupt_pin) {
 		std::cerr << evt_count << " events, ";
 		std::cerr << duration << " ms, ";
 		auto rate = static_cast<double>(evt_count) / static_cast<double>(duration) * 1e6;
-		std::cerr << "rate is " << rate << "/s, " << rate * 60 << "/min, " << rate * 60 * 24 << "/d, " << rate * 60 * 24 * 7 << "/w" << std::endl;
+		std::cerr << "rate is " << rate << "/s, " << rate * 60 << "/min, " << rate * 60 * 60 << "/h" << rate * 60 * 60 * 24 << "/d, " << rate * 60 * 60 * 24 * 7 << "/w" << std::endl;
 		std::cerr << "non processed events in queues: " << stop0.size() << " " << stop1.size() << " (should not be greate than " << max_queue_size << ")" << std::endl;
 		return 0;
 	});
