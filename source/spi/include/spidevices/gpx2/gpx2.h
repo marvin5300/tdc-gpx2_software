@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include <queue>
+#include <chrono>
 #include <cmath>
 
 
@@ -36,6 +37,7 @@ namespace SPI {
 			uint32_t stop_result{};
 			double lsb_ps{1.};
 			double refclk_freq{std::numeric_limits<double>::quiet_NaN()};
+			std::chrono::time_point<std::chrono::system_clock> ts{};
 			operator bool();
 			auto operator < (const Meas& other) const -> bool;
 			auto operator > (const Meas& other) const -> bool;

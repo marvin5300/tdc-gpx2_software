@@ -147,9 +147,11 @@ auto Readout::read_tdc()->int {
 		std::this_thread::sleep_for(readout_loop_timeout);
 	}
 	for (unsigned i = 0; i < 4; i++) {
+		auto now = std::chrono::system_clock::now();
 		auto measurements = gpx2->read_results();
 		for (unsigned j = 0; j < 4; j++) {
 			if (measurements[j]) {
+				measurements[j].ts = now;
 				if (j % 2 == 0) {
 					stop0.push(std::move(measurements[j]));
 				}
@@ -209,6 +211,8 @@ void Readout::process_queue(bool ignore_max_queue) {
 			auto diff = SPI::GPX2_TDC::diff(q0.front(), q1.front());
 			if (fabs(diff) < m_max_interval) {
 				evt_count += 1;
+				std::cout << q0.front().ts.time_since_epoch().count();
+				std::cout << " ";
 				std::cout << diff;
 				//std::cout << " " << q0.front().ref_index << " " << q0.front().stop_result;
 				//std::cout << " " << q1.front().ref_index << " " << q1.front().stop_result;
