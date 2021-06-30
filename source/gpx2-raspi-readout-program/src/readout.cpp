@@ -7,6 +7,7 @@
 #include <queue>
 #include <cmath>
 #include <omp.h>
+#include <chrono>
 #include <csignal>
 
 std::unique_ptr<Readout> Readout::instance{};
