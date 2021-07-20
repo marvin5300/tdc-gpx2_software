@@ -9,6 +9,7 @@
 #include <omp.h>
 #include <chrono>
 #include <csignal>
+#include <algorithm>
 
 Readout::~Readout()
 {
