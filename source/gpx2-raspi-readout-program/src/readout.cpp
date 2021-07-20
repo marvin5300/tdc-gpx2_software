@@ -11,73 +11,55 @@
 #include <csignal>
 #include <algorithm>
 
-Readout::~Readout()
-{
-	if (m_result.valid()) {
-		stop();
-		m_result.wait();
-		process_result.wait();
-	}
-}
+Readout::Readout(double max_ref_diff, unsigned interrupt_pin)
+	: m_max_interval{max_ref_diff}
+	, m_interrupt_pin{interrupt_pin}
+	, gpio_thread{
+			[&] {
+			auto result{ setup() };
+			if (result != 0) {
+				return result;
+			}
 
-void Readout::start(double max_ref_diff, unsigned interrupt_pin) {
-	if (m_result.valid()) {
-		std::cerr << "readout already started\n";
-		return;
-	}
-
-	m_max_interval = max_ref_diff;
-	m_interrupt_pin = interrupt_pin;
-
-	m_result = std::async(std::launch::async, [&] {
-		auto result{ setup() };
-		if (result != 0) {
+			while (m_run) {
+				result = read_tdc();
+				if (result != 0) {
+					break;
+				}
+			}
 			return result;
 		}
-
-		while (m_run) {
-			result = read_tdc();
-			if (result != 0) {
-				break;
+	}
+	,analysis_thread{
+			[&] {
+			start_time = std::chrono::high_resolution_clock::now();
+			while (m_run) {
+				std::this_thread::sleep_for(process_loop_timeout);
+				process_queue();
 			}
+			if (!tdc_stop[1].empty() && !tdc_stop[0].empty()) {
+				process_queue(true);
+			}
+			end_time = std::chrono::high_resolution_clock::now();
+			auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
+			std::cerr << evt_count << " events, ";
+			std::cerr << duration << " ms, ";
+			auto rate = static_cast<double>(evt_count) / static_cast<double>(duration) * 1e6;
+			std::cerr << "rate is " << rate << "/s, " << rate * 60 << "/min, " << rate * 60 * 60 << "/h, " << rate * 60 * 60 * 24 << "/d, " << rate * 60 * 60 * 24 * 7 << "/w" << std::endl;
+			std::cerr << "non processed events in queues: " << tdc_stop[0].size() << " " << tdc_stop[1].size() << " (should not be greate than " << max_queue_size << ")" << std::endl;
+			return 0;
 		}
-		return result + shutdown();
-	});
+	}{}
 
-	process_result = std::async(std::launch::async, [&] {
-		start_time = std::chrono::high_resolution_clock::now();
-		while (m_run) {
-			std::this_thread::sleep_for(process_loop_timeout);
-			process_queue();
-		}
-		if (!tdc_stop[1].empty() && !tdc_stop[0].empty()) {
-			process_queue(true);
-		}
-		end_time = std::chrono::high_resolution_clock::now();
-		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
-		std::cerr << evt_count << " events, ";
-		std::cerr << duration << " ms, ";
-		auto rate = static_cast<double>(evt_count) / static_cast<double>(duration) * 1e6;
-		std::cerr << "rate is " << rate << "/s, " << rate * 60 << "/min, " << rate * 60 * 60 << "/h, " << rate * 60 * 60 * 24 << "/d, " << rate * 60 * 60 * 24 * 7 << "/w" << std::endl;
-		std::cerr << "non processed events in queues: " << tdc_stop[0].size() << " " << tdc_stop[1].size() << " (should not be greate than " << max_queue_size << ")" << std::endl;
-		return 0;
-	});
+Readout::~Readout() {
+	stop();
+	gpio_thread.join();
+	analysis_thread.join();
 }
 
 void Readout::stop()
 {
 	m_run = false;
-}
-
-void Readout::join()
-{
-	if (!m_result.valid()||!process_result.valid())
-	{
-		std::cerr << "m_result valid? " << m_result.valid() << " process_result valid? " << process_result.valid() << std::endl;
-		return;
-	}
-	m_result.wait();
-	process_result.wait();
 }
 
 auto Readout::setup()->int {
@@ -127,22 +109,12 @@ auto Readout::setup()->int {
 	return 0;
 }
 
-auto Readout::shutdown() -> int
-{
-	// put here all stuff that has to be done before closing
-	if (handler) {
-		handler->stop();
-		handler->join();
-	}
-	return 0;
-}
-
 auto Readout::read_tdc()->int {
 	// checks if data is available on the gpx2 (by checking if interrupt pin is low)
 	// then reads out data from the gpx2-tdc and puts it in the queue
 	while (callback->read(m_interrupt_pin) != 0) {
 		// while interrupt pin is high, do not readout (since there is no data available)
-		// std::this_thread::sleep_for(readout_loop_timeout);
+		// std::this_thread::sleep_for(std::chrono::microseconds(1));
 	}
 	for (unsigned i = 0; i < 4; i++) {
 		auto now = std::chrono::system_clock::now();

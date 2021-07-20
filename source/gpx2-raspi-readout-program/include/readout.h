@@ -4,6 +4,7 @@
 #include "gpx2.h"
 #include "gpio.h"
 #include <future>
+#include <thread>
 #include <iostream>
 #include <iomanip>
 #include <mutex>
@@ -20,19 +21,14 @@ inline static void print_hex(const std::string& str) {
 
 class Readout {
 public:
-	Readout() = default;
+	Readout(double max_ref_diff = 100e-9, unsigned interrupt_pin = 20);
 	~Readout();
 
-	void start(double max_interval, unsigned interrupt_pin);
-
 	void stop();
-
-	void join();
 
 private:
 	[[nodiscard]] auto setup()->int;
 	[[nodiscard]] auto read_tdc()->int;
-	[[nodiscard]] auto shutdown()->int;
 
 	[[nodiscard]] auto process_loop()->int;
 
@@ -46,8 +42,10 @@ private:
 	const std::chrono::microseconds readout_loop_timeout{ std::chrono::microseconds(1) };
 	double m_max_interval{};
 	unsigned m_interrupt_pin{};
-	std::future<int> m_result{};
-	std::future<int> process_result{};
+	std::thread gpio_thread;
+	std::thread analysis_thread;
+	// std::future<int> m_result{};
+	// std::future<int> process_result{};
 	std::unique_ptr<SPI::GPX2_TDC::GPX2> gpx2{};
 	std::array<std::queue<SPI::GPX2_TDC::Meas>,2> tdc_stop{};
 	std::condition_variable queue_condition;
