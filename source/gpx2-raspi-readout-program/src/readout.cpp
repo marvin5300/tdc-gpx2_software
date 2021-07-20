@@ -10,8 +10,6 @@
 #include <chrono>
 #include <csignal>
 
-std::unique_ptr<Readout> Readout::instance{};
-
 Readout::~Readout()
 {
 	if (m_result.valid()) {
@@ -26,8 +24,6 @@ void Readout::start(double max_ref_diff, unsigned interrupt_pin) {
 		std::cerr << "readout already started\n";
 		return;
 	}
-
-	instance.reset(this);
 
 	m_max_interval = max_ref_diff;
 	m_interrupt_pin = interrupt_pin;
@@ -53,7 +49,7 @@ void Readout::start(double max_ref_diff, unsigned interrupt_pin) {
 			std::this_thread::sleep_for(process_loop_timeout);
 			process_queue();
 		}
-		while (stop1.size() > 0 && stop0.size() > 0) {
+		if (!tdc_stop[1].empty() && !tdc_stop[0].empty()) {
 			process_queue(true);
 		}
 		end_time = std::chrono::high_resolution_clock::now();
@@ -62,7 +58,7 @@ void Readout::start(double max_ref_diff, unsigned interrupt_pin) {
 		std::cerr << duration << " ms, ";
 		auto rate = static_cast<double>(evt_count) / static_cast<double>(duration) * 1e6;
 		std::cerr << "rate is " << rate << "/s, " << rate * 60 << "/min, " << rate * 60 * 60 << "/h, " << rate * 60 * 60 * 24 << "/d, " << rate * 60 * 60 * 24 * 7 << "/w" << std::endl;
-		std::cerr << "non processed events in queues: " << stop0.size() << " " << stop1.size() << " (should not be greate than " << max_queue_size << ")" << std::endl;
+		std::cerr << "non processed events in queues: " << tdc_stop[0].size() << " " << tdc_stop[1].size() << " (should not be greate than " << max_queue_size << ")" << std::endl;
 		return 0;
 	});
 }
@@ -145,7 +141,7 @@ auto Readout::read_tdc()->int {
 	// then reads out data from the gpx2-tdc and puts it in the queue
 	while (callback->read(m_interrupt_pin) != 0) {
 		// while interrupt pin is high, do not readout (since there is no data available)
-		std::this_thread::sleep_for(readout_loop_timeout);
+		// std::this_thread::sleep_for(readout_loop_timeout);
 	}
 	for (unsigned i = 0; i < 4; i++) {
 		auto now = std::chrono::system_clock::now();
@@ -153,87 +149,70 @@ auto Readout::read_tdc()->int {
 		for (unsigned j = 0; j < 4; j++) {
 			if (measurements[j]) {
 				measurements[j].ts = now;
-				if (j % 2 == 0) {
-					stop0.push(std::move(measurements[j]));
-				}
-				else {
-					stop1.push(std::move(measurements[j]));
-				}
+				tdc_stop[j%2].emplace(std::move(measurements[j]));
 			}
 		}
 	}
+	queue_condition.notify_all();
 	return 0;
 }
 
 void Readout::process_queue(bool ignore_max_queue) {
-	// checks ref_diff between ordered stop0 and stop1 channels.
+	// checks ref_diff between ordered tdc_stop[0] and tdc_stop[1] channels.
 	// Compares a few values from the queues, removes not matching timestamps and prints matching ones
 
-	if (stop0.size() < max_queue_size && stop1.size() < max_queue_size && !ignore_max_queue) {
+	std::mutex mutex;
+	std::unique_lock<std::mutex> lock {mutex};
+	if (queue_condition.wait_for(lock,std::chrono::seconds(1))==std::cv_status::timeout || (tdc_stop[0].size() < max_queue_size && tdc_stop[1].size() < max_queue_size && !ignore_max_queue)) {
 		return;
 	}
-	auto q0 = stop0.dump();
-	auto q1 = stop1.dump();
-#pragma omp parallel sections num_threads(2)
-	{
-#pragma omp section 
-		{
-			std::sort(q0.begin(), q0.end());
-			std::unique(q0.begin(), q0.end());
-		}
-#pragma omp section
-		{
-			std::sort(q1.begin(), q1.end());
-			std::unique(q1.begin(), q1.end());
+	std::array<std::vector<SPI::GPX2_TDC::Meas>,2> data{};
+	for (std::size_t i{0}; i<2; i++){
+		while(tdc_stop[i].size()>min_queue_size || (ignore_max_queue && !tdc_stop[i].empty())){
+			data[i].emplace_back(tdc_stop[i].front());
+			tdc_stop[i].pop();
 		}
 	}
+	// at this point one queue is full and we can check the content for 
+	std::sort(data[0].begin(), data[0].end());
+	std::unique(data[0].begin(), data[0].end());
+	std::sort(data[1].begin(), data[1].end());
+	std::unique(data[1].begin(), data[1].end());
 	
-	while (!q0.empty() && !q1.empty()) {
-		auto ref_diff = static_cast<int32_t>(q1.front().ref_index) - static_cast<int32_t>(q0.front().ref_index);
+	auto reset_ref = [&](){return static_cast<int32_t>(data[1].front().ref_index) - static_cast<int32_t>(data[0].front().ref_index);};
+	while (!data[0].empty() && !data[1].empty()) {
+		auto ref_diff = reset_ref();
 		while (ref_diff > 0) {
 			//std::cout << "ref_diff " << ref_diff << std::endl;
-			q0.pop_front();
+			data[0].erase(data[0].begin());
 			//evt_count += 1U;
-			if (q0.empty()) {
+			if (data[0].empty()) {
 				return;
 			}
-			ref_diff = static_cast<int32_t>(q1.front().ref_index) - static_cast<int32_t>(q0.front().ref_index);
+			ref_diff = reset_ref();
 		}
 		while (ref_diff < 0) {
 			//std::cout << "ref_diff " << ref_diff << std::endl;
-			q1.pop_front();
+			data[1].erase(data[1].begin());
 			//evt_count += 1U;
-			if (q1.empty()) {
+			if (data[1].empty()) {
 				return;
 			}
-			ref_diff = static_cast<int32_t>(q1.front().ref_index) - static_cast<int32_t>(q0.front().ref_index);
+			ref_diff = reset_ref();
 		}
 		if (ref_diff == 0) {
-			auto diff = SPI::GPX2_TDC::diff(q0.front(), q1.front());
+			auto diff = SPI::GPX2_TDC::diff(data[0].front(), data[1].front());
 			if (fabs(diff) < m_max_interval) {
 				evt_count += 1;
-				std::cout << q0.front().ts.time_since_epoch().count();
+				std::cout << std::chrono::duration_cast<std::chrono::nanoseconds>(data[0].front().ts.time_since_epoch()).count();
 				std::cout << " ";
 				std::cout << diff;
 				//std::cout << " " << q0.front().ref_index << " " << q0.front().stop_result;
 				//std::cout << " " << q1.front().ref_index << " " << q1.front().stop_result;
-				std::cout << std::endl;
+				std::cout << "\n";
 			}
-			q0.pop_front();
-			q1.pop_front();
+			data[0].erase(data[0].begin());
+			data[1].erase(data[1].begin());
 		}
-		/*
-		std::cout << "\nstop0, " << q0.size() << ":" << std::endl;
-		while (!q0.empty()) {
-			std::cout << std::setw(8) << std::setfill('0') << q0.front().ref_index << "." << std::setw(6) << std::setfill('0') << q0.front().stop_result << std::endl;
-			q0.pop_front();
-		}
-		std::cout << "\nstop1, " << q1.size() << ":" << std::endl;
-		while (!q1.empty()) {
-			std::cout << std::setw(8) << std::setfill('0') << q1.front().ref_index << "." << std::setw(8) << std::setfill('0') << q1.front().stop_result << std::endl;
-			q1.pop_front();
-		}
-		std::cout << std::endl;
-		*/
 	}
 }

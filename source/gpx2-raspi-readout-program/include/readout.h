@@ -3,12 +3,12 @@
 
 #include "gpx2.h"
 #include "gpio.h"
-#include "queue.h"
 #include <future>
 #include <iostream>
 #include <iomanip>
 #include <mutex>
 #include <shared_mutex>
+#include <condition_variable>
 #include <chrono>
 
 inline static void print_hex(const std::string& str) {
@@ -38,19 +38,19 @@ private:
 
 	void process_queue(bool ignore_max_queue = false);
 
-	static std::unique_ptr<Readout> instance;
 	std::unique_ptr<gpio> handler{};
 	std::shared_ptr<gpio::callback> callback{};
 	const std::chrono::milliseconds process_loop_timeout{ std::chrono::milliseconds(100) };
-	size_t max_queue_size{ 50 };
+	size_t max_queue_size{ 500 };
+	size_t min_queue_size{ 5 };
 	const std::chrono::microseconds readout_loop_timeout{ std::chrono::microseconds(1) };
 	double m_max_interval{};
 	unsigned m_interrupt_pin{};
 	std::future<int> m_result{};
 	std::future<int> process_result{};
 	std::unique_ptr<SPI::GPX2_TDC::GPX2> gpx2{};
-	thrdsf::Queue<SPI::GPX2_TDC::Meas> stop0{};
-	thrdsf::Queue<SPI::GPX2_TDC::Meas> stop1{};
+	std::array<std::queue<SPI::GPX2_TDC::Meas>,2> tdc_stop{};
+	std::condition_variable queue_condition;
 	std::chrono::time_point<std::chrono::high_resolution_clock> start_time{};
 	std::chrono::time_point<std::chrono::high_resolution_clock> end_time{};
 	std::atomic<uint64_t> evt_count{};
