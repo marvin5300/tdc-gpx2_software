@@ -39,7 +39,6 @@ configure_file(
 
 set(READOUT_HEADER_FILES
     "${PROJECT_HEADER_DIR}/gpio.h"
-    "${PROJECT_HEADER_DIR}/queue.h"
     "${PROJECT_HEADER_DIR}/readout.h"
 )
 set(READOUT_SOURCE_FILES
