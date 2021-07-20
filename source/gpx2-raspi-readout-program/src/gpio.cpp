@@ -221,10 +221,13 @@ auto gpio::shutdown() -> int
 		//delete lines;
 		lines = nullptr;
 	}
-	for (auto it = other_lines.begin(); it != other_lines.end(); it++) {
-		gpiod_line_release(it->second);
-		other_lines.erase(it);
+	for (auto [id, ptr] : other_lines){
+		if (ptr != nullptr){
+			gpiod_line_release(ptr);
+			ptr = nullptr;
+		}
 	}
+	other_lines.clear();
 	if (chip != nullptr){
 		gpiod_chip_close(chip);
 		//delete chip;
