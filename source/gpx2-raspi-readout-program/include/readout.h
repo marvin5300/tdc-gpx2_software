@@ -42,16 +42,14 @@ private:
 	const std::chrono::microseconds readout_loop_timeout{ std::chrono::microseconds(1) };
 	double m_max_interval{};
 	unsigned m_interrupt_pin{};
-	std::thread gpio_thread;
-	std::thread analysis_thread;
-	// std::future<int> m_result{};
-	// std::future<int> process_result{};
-	std::unique_ptr<SPI::GPX2_TDC::GPX2> gpx2{};
-	std::array<std::queue<SPI::GPX2_TDC::Meas>,2> tdc_stop{};
-	std::condition_variable queue_condition;
 	std::chrono::time_point<std::chrono::high_resolution_clock> start_time{};
 	std::chrono::time_point<std::chrono::high_resolution_clock> end_time{};
+	std::condition_variable queue_condition;
+	std::array<std::queue<SPI::GPX2_TDC::Meas>,2> tdc_stop{};
+	std::unique_ptr<SPI::GPX2_TDC::GPX2> gpx2{};
 	std::atomic<uint64_t> evt_count{};
 	std::atomic<bool> m_run{ true };
+	std::thread gpio_thread;
+	std::thread analysis_thread;
 };
 #endif // READOUT_H
