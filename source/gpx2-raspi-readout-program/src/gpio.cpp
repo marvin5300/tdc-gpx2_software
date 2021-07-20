@@ -261,7 +261,7 @@ auto gpio::read(unsigned pin_num) -> int
 	}
 	gpiod_line* line = nullptr;
 	if (other_lines.count(pin_num)==0) {
-		std::cout << other_lines.count(pin_num) << std::endl;;
+		//std::cout << other_lines.count(pin_num) << std::endl;
 		line = gpiod_chip_get_line(chip, pin_num);
 		if (!line) {
 			std::cerr << "Chip get lines failed for line " << pin_num << std::endl;
