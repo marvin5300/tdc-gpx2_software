@@ -5,9 +5,9 @@ The TDC-GPX2 is a time-to-digital converter from ScioSense with up to 10ps timin
 Files for building readout software for the TDC-GPX2 from ScioSense.
 | Folder | Description |
 | ------ | ----------- |
-| gpx2-raspi-lib | Library for the tdc board containing all options and an high level access for readout.
-| gpx2-raspi-readout | Contains a readout loop, buffer and calculations to measure time intervals between two signals with good accuracy.
-| gpx2-fpga | tba
+| source/gpx2-raspi-readout-program| Contains a readout loop, buffer and calculations to measure time intervals between two signals with good accuracy.
+| source/spi | Folder containing gpx2 source files for making the tdc board library containing all options and an high level access for readout.
+| source/gpx2-fpga | tba |
 <br>
 <strong>Readout via SPI:</strong>
 
