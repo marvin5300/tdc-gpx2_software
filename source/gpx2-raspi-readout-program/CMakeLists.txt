@@ -16,7 +16,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
-find_library(PIGPIOD_IF2 pigpiod_if2 REQUIRED)
+if(${BUILD_TIDY})
+    set(CMAKE_CXX_CLANG_TIDY
+      clang-tidy;
+      -header-filter=^global;
+      -checks=-*,readability-*,bugprone-*,performace-*,clang-analyzer-*,modernize-*,hicpp-*;
+    )
+endif(${BUILD_TIDY})
 
 add_compile_options(
     -Wall
@@ -31,22 +37,36 @@ configure_file(
     "${PROJECT_HEADER_DIR}/version.h"
 )
 
+set(READOUT_HEADER_FILES
+    "${PROJECT_HEADER_DIR}/gpio.h"
+    "${PROJECT_HEADER_DIR}/readout.h"
+)
 set(READOUT_SOURCE_FILES
     "${PROJECT_SRC_DIR}/main.cpp"
+    "${PROJECT_SRC_DIR}/gpio.cpp"
+    "${PROJECT_SRC_DIR}/readout.cpp"
 )
 
 add_executable(readout ${READOUT_SOURCE_FILES} ${READOUT_HEADER_FILES})
 
 target_include_directories(readout PUBLIC
     ${PROJECT_HEADER_DIR}
-    "${CMAKE_CURRENT_SOURCE_DIR}/../gpx2-raspi-lib/include/"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../spi/include/spidevices/gpx2/"
 )
 
 target_link_directories(readout PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/../lib/")
+
+if (!WIN32)
+find_library(LIBGPIOD libgpiod REQUIRED)
+endif()
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
 target_link_libraries(readout
-    gpx2_static
-    pigpiod_if2
+    Threads::Threads
+    spi_static
+    gpiod
 )
 
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
+#set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
+#set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")

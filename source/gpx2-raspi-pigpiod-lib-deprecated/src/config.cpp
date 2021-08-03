@@ -5,9 +5,39 @@
 using namespace GPX2_TDC;
 
 // default config defined by the author of this program
-Config::Config() {
-	PIN_ENA_RSTIDX = 0;
+Config::Config()
+	: PIN_ENA_RSTIDX{ 0 }
+	, PIN_ENA_DISABLE{ 0 }
+	, PIN_ENA_LVDS_OUT{ 0 }
+	, PIN_ENA_REFCLK{ 0 }
+	, PIN_ENA_STOP4{ 0 }
+	, PIN_ENA_STOP3{ 0 }
+	, PIN_ENA_STOP2{ 0 }
+	, PIN_ENA_STOP1{ 0 } // reg_addr 0
+	, HIGH_RESOLUTION{ 0 }
+	, CHANNEL_COMBINE{ 0 }
+	, HIT_ENA_STOP4{ 0 }
+	, HIT_ENA_STOP3{ 0 }
+	, HIT_ENA_STOP2{ 0 }
+	, HIT_ENA_STOP1{ 0 } // reg_addr 1
+	, BLOCKWISE_FIFO_READ{ 0 }
+	, COMMON_FIFO_READ{ 0 }
+	, LVS_DOUBLE_DATA_RATE{ 0 }
+	, STOP_DATA_BITWIDTH{ 0 }
+	, REF_INDEX_BITWIDTH{ 0 } // reg_addr 2
+	, REFCLK_DIVISIONS_LOWER{ 0 } // reg_addr 3
+	, REFCLK_DIVISIONS_MIDDLE{ 0 } // reg_addr 4
+	, REFCLK_DIVISIONS_UPPER{ 0 } // reg_addr 5
+	, LVDS_TEST_PATTERN{ 0 } // reg_addr 6
+	, REFCLK_BY_XOSC{ 0 }
+	, LVDS_DATA_VALID_ADJUST{ 0 } // reg_addr 7
+	, CMOS_INPUT{ 0 } // reg_addr 16
+{}
+
+void Config::loadDefaultConfig() {
+	// reg_addr 0
 	PIN_ENA_DISABLE = 0;
+	PIN_ENA_RSTIDX = 0;
 	PIN_ENA_LVDS_OUT = 0;
 	PIN_ENA_REFCLK = 0;
 	PIN_ENA_STOP4 = 1;
@@ -15,6 +45,7 @@ Config::Config() {
 	PIN_ENA_STOP2 = 1;
 	PIN_ENA_STOP1 = 1;
 
+	// reg_addr 1
 	HIGH_RESOLUTION = 2;
 	CHANNEL_COMBINE = 0;
 	HIT_ENA_STOP4 = 1;
@@ -22,23 +53,35 @@ Config::Config() {
 	HIT_ENA_STOP2 = 1;
 	HIT_ENA_STOP1 = 1;
 
+	// reg_addr 2
 	BLOCKWISE_FIFO_READ = 1;
 	COMMON_FIFO_READ = 1;
 	LVS_DOUBLE_DATA_RATE = 0;
 	STOP_DATA_BITWIDTH = 0b11;
 	REF_INDEX_BITWIDTH = 0b010;
 
+	// reg_addr 3
 	REFCLK_DIVISIONS_LOWER = 0x40;	// 5MHz clk => T = 200ns = 200,000ps
+
+	// reg_addr 4
 	REFCLK_DIVISIONS_MIDDLE = 0x0d;	// set REFCLK_DIVISIONS to 200,000 for LSB to be 1ps
+
+	// reg_addr 5
 	REFCLK_DIVISIONS_UPPER = 0x03; // 200,000 = 0x030d40
 
+	// reg_addr 6
 	LVDS_TEST_PATTERN = 0;
-	LVDS_DATA_VALID_ADJUST = 1;
+
+	// reg_addr 7
 	REFCLK_BY_XOSC = 1; // use external quartz, ignore external clock => 1
+	LVDS_DATA_VALID_ADJUST = 1;
+
+	// reg_addr 16
+	CMOS_INPUT = 1;
 }
 
 // pack bits in the correct order and return a string.
-std::string Config::str() {
+std::string Config::str() const {
 	std::string data;
 	uint8_t byte;
 
@@ -89,7 +132,7 @@ std::string Config::str() {
 	data += static_cast<char>(0b11110001);
 	data += static_cast<char>(0b01111101);
 
-	byte = CMOS_INPUT << 2;
+	byte = (CMOS_INPUT << 2);
 	data += static_cast<char>(byte);
 	return data;
 }

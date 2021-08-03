@@ -12,7 +12,9 @@
 *.cb2
 .*.lb
 *.pdf
-**/figures/
+**/.vscode/
+**/.vs/
+#**/figures/
 ## Intermediate documents:
 *.dvi
 *.xdv

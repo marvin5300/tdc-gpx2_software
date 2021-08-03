@@ -51,7 +51,8 @@ namespace GPX2_TDC {
 		uint8_t CMOS_INPUT : 1;
 
 		Config();
-		std::string str();
+		void loadDefaultConfig();
+		std::string str() const;
 	};
 }
 #endif // !CONFIG_H
