@@ -1,2 +1,2 @@
-# master-thesis
+# TDC-GPX2_Software
 TDC GPX2
