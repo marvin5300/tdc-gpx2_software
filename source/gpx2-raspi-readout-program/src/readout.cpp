@@ -70,7 +70,7 @@ auto Readout::setup()->int {
 	gpx2 = std::make_unique<SPI::GPX2_TDC::GPX2>();
 	SPI::GPX2_TDC::Config conf{};
 	conf.loadDefaultConfig();
-	conf.BLOCKWISE_FIFO_READ = 1U;
+	conf.BLOCKWISE_FIFO_READ = 0U;
 	conf.COMMON_FIFO_READ = 0U;
 
 	//conf.PIN_ENA_STOP3 = 0;
@@ -116,7 +116,7 @@ auto Readout::read_tdc()->int {
 		// while interrupt pin is high, do not readout (since there is no data available)
 		// std::this_thread::sleep_for(std::chrono::microseconds(1));
 	}
-	for (unsigned i = 0; i < 4; i++) {
+	//for (unsigned i = 0; i < 4; i++) {
 		auto now = std::chrono::system_clock::now();
 		auto measurements = gpx2->read_results();
 		for (unsigned j = 0; j < 4; j++) {
@@ -125,7 +125,7 @@ auto Readout::read_tdc()->int {
 				tdc_stop[j%2].emplace(std::move(measurements[j]));
 			}
 		}
-	}
+	//}
 	queue_condition.notify_all();
 	return 0;
 }
